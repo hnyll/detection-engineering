@@ -5,12 +5,30 @@ FiftyOne -> ONNX export + parity -> gates snapshot."""
 
 from __future__ import annotations
 
+import urllib.request
+import zipfile
+
 import yaml
 
 from . import paths
 from .scaffold import new_experiment
 
 SMOKE_NAME = "phase0_smoke"
+COCO128_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0/coco128.zip"
+
+
+def _ensure_coco128() -> None:
+    """Fetch COCO128 into data/ ourselves — relying on Ultralytics' auto-download
+    extracts into the machine-global datasets_dir, not this repo."""
+    if (paths.DATA / "coco128" / "images" / "train2017").exists():
+        return
+    paths.DATA.mkdir(exist_ok=True)
+    zpath = paths.DATA / "coco128.zip"
+    print(f"downloading coco128 (~7MB) -> {zpath.parent}")
+    urllib.request.urlretrieve(COCO128_URL, zpath)
+    with zipfile.ZipFile(zpath) as z:
+        z.extractall(paths.DATA)
+    zpath.unlink()
 
 HYPOTHESIS = """# {exp} — Hypothesis
 
@@ -45,7 +63,9 @@ CONFIG = {
         "causal_variable": "none — plumbing smoke test",
         "compensating_changes": [],
     },
-    "train": {"model": "yolo11n.pt", "imgsz": 640, "epochs": 3, "batch": 16},
+    # batch 8: plumbing test only, and this box shares its 8GB card with the
+    # Windows desktop — headroom beats throughput here
+    "train": {"model": "yolo11n.pt", "imgsz": 640, "epochs": 3, "batch": 8},
 }
 
 
@@ -61,30 +81,33 @@ def _ensure_exp():
 
 
 def run_phase0() -> None:
-    from .evaluate import evaluate
-    from .export import export_model, parity
-    from .fo_review import review
-    from .gates import report
-    from .tide_wrap import run_tide
-    from .train import train
+    import subprocess
+    import sys
 
+    from .gates import report
+
+    _ensure_coco128()
     exp = _ensure_exp()
     name = exp.name
+    # Each GPU step runs in its own subprocess: process exit is the only reliable
+    # full CUDA teardown (VRAM + WSL2 pinned-memory pool) between back-to-back
+    # runs — in-process cleanup was not enough on this 8GB card.
     steps = [
         ("train (planned interrupt after epoch 1)",
-         lambda: train(name, seeds=[17], interrupt_after=1)),
-        ("resume from checkpoint", lambda: train(name, seeds=[17], resume=True)),
-        ("second clean run (seed 42)", lambda: train(name, seeds=[42])),
-        ("fixed-protocol eval", lambda: evaluate(name)),
-        ("TIDE error taxonomy", lambda: run_tide(name)),
-        ("FiftyOne load + evaluate (headless)",
-         lambda: review(name, export_stats=True)),
-        ("ONNX export", lambda: export_model(name, fmt="onnx")),
-        ("pt vs ONNX parity", lambda: parity(name)),
+         ["train", name, "--seeds", "17", "--interrupt-after", "1"]),
+        ("resume from checkpoint", ["train", name, "--seeds", "17", "--resume"]),
+        ("second clean run (seed 42)", ["train", name, "--seeds", "42"]),
+        ("fixed-protocol eval", ["eval", name]),
+        ("TIDE error taxonomy", ["tide", name]),
+        ("FiftyOne load + evaluate (headless)", ["review", name, "--export-stats"]),
+        ("ONNX export", ["export", name, "--format", "onnx"]),
+        ("pt vs ONNX parity", ["parity", name]),
     ]
-    for i, (label, fn) in enumerate(steps, 1):
-        print(f"\n===== phase0 [{i}/{len(steps)}] {label} =====")
-        fn()
+    for i, (label, args) in enumerate(steps, 1):
+        print(f"\n===== phase0 [{i}/{len(steps)}] {label} =====", flush=True)
+        r = subprocess.run([sys.executable, "-m", "src.cli", *args], cwd=paths.ROOT)
+        if r.returncode != 0:
+            raise SystemExit(f"phase0 step failed: {label} (exit {r.returncode})")
 
     print("\n===== phase0: gates snapshot =====")
     report()

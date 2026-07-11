@@ -1,0 +1,130 @@
+{
+  "runs": [
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_000_phase0_smoke_s17",
+      "status": "interrupted",
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "nex6j20v",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4211,
+        "max_child": 722
+      },
+      "timestamp": "2026-07-11T14:56:44+00:00"
+    },
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_000_phase0_smoke_s17",
+      "status": "completed",
+      "resumed_from": "/home/hnyll/detection-engineering/runs/exp_000_phase0_smoke_s17/weights/last.pt",
+      "wandb_mode": "online",
+      "wandb_id": "kin50k8q",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4862,
+        "max_child": 4862
+      },
+      "timestamp": "2026-07-11T14:57:20+00:00"
+    },
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_000_phase0_smoke_s17",
+      "status": "interrupted",
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "u3hnbblw",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4199,
+        "max_child": 722
+      },
+      "timestamp": "2026-07-11T14:59:51+00:00"
+    },
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_000_phase0_smoke_s17",
+      "status": "interrupted",
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "iuvcd11w",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3624,
+        "max_child": 722
+      },
+      "timestamp": "2026-07-11T15:02:45+00:00"
+    },
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_000_phase0_smoke_s17",
+      "status": "completed",
+      "resumed_from": "/home/hnyll/detection-engineering/runs/exp_000_phase0_smoke_s17/weights/last.pt",
+      "wandb_mode": "online",
+      "wandb_id": "mmptstqk",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3955,
+        "max_child": 3955
+      },
+      "timestamp": "2026-07-11T15:04:00+00:00"
+    },
+    {
+      "seed": 42,
+      "run_dir": "runs/exp_000_phase0_smoke_s42",
+      "status": "completed",
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "fjv5gh0s",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3977,
+        "max_child": 3977
+      },
+      "timestamp": "2026-07-11T15:05:15+00:00"
+    },
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_000_phase0_smoke_s17",
+      "status": "interrupted",
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "boynzhdx",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3614,
+        "max_child": 722
+      },
+      "timestamp": "2026-07-11T15:12:26+00:00"
+    },
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_000_phase0_smoke_s17",
+      "status": "completed",
+      "resumed_from": "/home/hnyll/detection-engineering/runs/exp_000_phase0_smoke_s17/weights/last.pt",
+      "wandb_mode": "online",
+      "wandb_id": "he1lmpu3",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3993,
+        "max_child": 3993
+      },
+      "timestamp": "2026-07-11T15:13:48+00:00"
+    },
+    {
+      "seed": 42,
+      "run_dir": "runs/exp_000_phase0_smoke_s42",
+      "status": "completed",
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "qqnibfv5",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4022,
+        "max_child": 4022
+      },
+      "timestamp": "2026-07-11T15:15:06+00:00"
+    }
+  ]
+}

@@ -50,6 +50,19 @@ def _list_wandb_runs() -> set:
     return {p.name for p in wdir.glob("*run-*")} if wdir.exists() else set()
 
 
+def _free_gpu(model) -> None:
+    """Release a finished run's GPU memory — back-to-back runs in one process
+    (multi-seed loops, phase0) OOM the 8GB card otherwise."""
+    import gc
+
+    import torch
+
+    del model
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
 def _peak_rss_mb() -> dict:
     self_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     child_kb = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
@@ -161,3 +174,5 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
             print(f"== done seed {seed}; peak RSS self={rss['self']}MB child={rss['max_child']}MB")
             if wandb_mode == "offline" and new_wandb:
                 print(f"   offline W&B run(s): {new_wandb} — sync later with: uv run wandb sync wandb/<run>")
+
+        _free_gpu(model)

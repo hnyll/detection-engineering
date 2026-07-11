@@ -1,0 +1,15 @@
+{
+  "weights": "/home/hnyll/detection-engineering/experiments/exp_000_phase0_smoke/seeds/s17/weights/best.pt",
+  "onnx": "experiments/exp_000_phase0_smoke/exports/best.onnx",
+  "n_images": 64,
+  "boxes_pt": 395,
+  "boxes_onnx": 410,
+  "matched": 342,
+  "unmatched_pt": 53,
+  "unmatched_onnx": 68,
+  "conf_mad": 0.034723,
+  "conf_max_ad": 0.285021,
+  "coord_mad_px": 0.7964,
+  "match_iou": 0.9,
+  "conf_floor": 0.25
+}

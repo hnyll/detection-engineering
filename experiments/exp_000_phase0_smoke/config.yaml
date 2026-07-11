@@ -1,0 +1,13 @@
+meta:
+  name: phase0_smoke
+  parent_exp: null
+  dataset: coco128
+  seeds:
+  - 17
+  causal_variable: "none \u2014 plumbing smoke test"
+  compensating_changes: []
+train:
+  model: yolo11n.pt
+  imgsz: 640
+  epochs: 3
+  batch: 8

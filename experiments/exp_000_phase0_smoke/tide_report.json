@@ -1,0 +1,20 @@
+{
+  "method": "tidecv",
+  "dAP": {
+    "Cls": 3.548,
+    "Loc": 3.36,
+    "Both": 1.187,
+    "Dupe": 1.081,
+    "Bkg": 4.256,
+    "Miss": 3.124
+  },
+  "special_dAP": {
+    "FalsePos": 13.406,
+    "FalseNeg": 8.343
+  },
+  "counts": null,
+  "notes": "dAP = AP gained by oracle-fixing that error type (TIDE paper definition)",
+  "dataset": "coco128",
+  "split": "val",
+  "predictions": "predictions_val_s17.json"
+}

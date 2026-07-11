@@ -16,6 +16,23 @@ PARITY_IMAGES = 64
 IOU_MATCH = 0.9
 
 
+def _preload_cudnn() -> None:
+    """onnxruntime dlopens cuDNN sublibraries (libcudnn_adv.so.9 etc.) that
+    torch's loader does not preload; load them RTLD_GLOBAL from the venv's
+    nvidia wheels so the CUDA provider can start (WSL2 has no system cuDNN)."""
+    import ctypes
+
+    import torch
+
+    base = Path(torch.__file__).parent.parent / "nvidia"
+    for pat in ("cudnn/lib/libcudnn*.so.9", "cublas/lib/libcublas*.so.*"):
+        for so in sorted(base.glob(pat)):  # core libcudnn.so.9 sorts first
+            try:
+                ctypes.CDLL(str(so), mode=ctypes.RTLD_GLOBAL)
+            except OSError:
+                pass
+
+
 def _weights(exp_dir: Path, seed: int | None) -> Path:
     if seed is None:
         cands = sorted((exp_dir / "seeds").glob("s*/weights/best.pt"))
@@ -102,6 +119,7 @@ def parity(exp_ref: str, seed: int | None = None) -> None:
     import torch  # noqa: F401
     from ultralytics import YOLO
 
+    _preload_cudnn()
     exp_dir = paths.resolve_exp(exp_ref)
     cfg = load_config(exp_dir)
     proto = load_protocol()
@@ -149,6 +167,10 @@ def parity(exp_ref: str, seed: int | None = None) -> None:
         "coord_mad_px": round(sum(coord_ad) / len(coord_ad), 4) if coord_ad else None,
         "match_iou": IOU_MATCH, "conf_floor": 0.25,
     }
+    from .train import _free_gpu
+    _free_gpu(m_pt)
+    _free_gpu(m_ox)
+
     out = _exports_dir(exp_dir) / "parity_report.json"
     out.write_text(json.dumps(report, indent=2) + "\n")
     print(f"wrote {out.relative_to(paths.ROOT)}")
@@ -170,6 +192,7 @@ def bench(exp_ref: str, backend: str, seed: int | None = None) -> None:
 
     from .evaluate import measure_speed
 
+    _preload_cudnn()
     exp_dir = paths.resolve_exp(exp_ref)
     cfg = load_config(exp_dir)
     proto = load_protocol()

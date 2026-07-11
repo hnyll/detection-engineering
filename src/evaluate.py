@@ -80,8 +80,12 @@ def coco_metrics(gt_json: Path, dets: list[dict], max_det: int, names: dict[int,
         e.accumulate()
         e.summarize()
     s = e.stats
+    # stats[0] is broken under custom maxDets (pycocotools' _summarize(1) uses a
+    # hardcoded default maxDets=100) — compute it from the precision array instead
+    pr = e.eval["precision"][:, :, :, 0, -1]
+    map50_95 = float(pr[pr > -1].mean()) if (pr > -1).any() else 0.0
     overall = {
-        "map50_95": round(float(s[0]), 5), "map50": round(float(s[1]), 5),
+        "map50_95": round(map50_95, 5), "map50": round(float(s[1]), 5),
         "map75": round(float(s[2]), 5), "ap_small": round(float(s[3]), 5),
         "ap_medium": round(float(s[4]), 5), "ap_large": round(float(s[5]), 5),
         "ar_max": round(float(s[8]), 5),
@@ -178,6 +182,9 @@ def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) 
         (sdir / "metrics.json").write_text(json.dumps(seed_metrics, indent=2) + "\n")
         print(f"   mAP50-95={acc['overall']['map50_95']:.4f}  mAP50={acc['overall']['map50']:.4f}  "
               f"AP_s={acc['overall']['ap_small']:.4f}  {speed['latency_ms_mean']}ms/img")
+
+        from .train import _free_gpu
+        _free_gpu(model)
 
     aggregate_exp(exp_dir)
 
