@@ -35,6 +35,7 @@ def ensure_fo_dataset(dataset: str, split: str):
         yaml_path=str(paths.dataset_yaml(dataset)),
         split=split,
         label_field="ground_truth",
+        include_all_data=True,  # keep label-less images so FP counts match COCOeval
         name=name,
     )
     ds.persistent = True

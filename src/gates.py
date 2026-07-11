@@ -64,7 +64,7 @@ def _checks() -> dict[str, list[tuple[str, bool, str]]]:
 
     has_metrics = [e for e in exps if (e / "metrics.json").exists()]
     resumed = [(e, r) for e, r in completed if r.get("resumed_from")]
-    with_wandb = [(e, r) for e, r in runs if r.get("wandb_runs")]
+    with_wandb = [(e, r) for e, r in runs if r.get("wandb_id") or r.get("wandb_runs")]
 
     tide_done = [e for e in exps if (e / "tide_report.json").exists()]
     reviews = {e: _json(e / "artifacts" / "fiftyone_review.json") for e in exps}

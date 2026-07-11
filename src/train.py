@@ -102,6 +102,17 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
                     raise KeyboardInterrupt(f"harness: planned interrupt after epoch {_n}")
             model.add_callback("on_fit_epoch_end", _interrupt)
 
+        # Own the W&B run: the ultralytics callback derives the project name from
+        # args.project (our absolute runs path -> garbage name). It skips its own
+        # init when a run is already active and logs into ours instead.
+        import wandb
+        wb_run = wandb.init(
+            project="detection-engineering",
+            name=paths.run_name(exp_dir, seed) + ("_resume" if resume else ""),
+            dir=str(paths.ROOT),
+        )
+        run_id = wb_run.id
+
         before = _list_wandb_runs()
         interrupted = False
         try:
@@ -119,6 +130,9 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
         except KeyboardInterrupt:
             interrupted = True
             print(f"== interrupted (checkpoint at {rdir / 'weights' / 'last.pt'})")
+        finally:
+            if wandb.run is not None:  # normal completion is finished by the callback
+                wandb.run.finish()
 
         new_wandb = sorted(_list_wandb_runs() - before)
         state = load_state(exp_dir)
@@ -128,6 +142,7 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
             "status": "interrupted" if interrupted else "completed",
             "resumed_from": str(rdir / "weights" / "last.pt") if resume else None,
             "wandb_mode": wandb_mode,
+            "wandb_id": run_id,
             "wandb_runs": new_wandb,
             "peak_rss_mb": _peak_rss_mb(),
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
