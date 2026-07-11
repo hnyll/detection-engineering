@@ -50,14 +50,15 @@ def _list_wandb_runs() -> set:
     return {p.name for p in wdir.glob("*run-*")} if wdir.exists() else set()
 
 
-def _free_gpu(model) -> None:
-    """Release a finished run's GPU memory — back-to-back runs in one process
-    (multi-seed loops, phase0) OOM the 8GB card otherwise."""
+def _free_gpu() -> None:
+    """Collect + empty CUDA cache. Callers MUST `del` their model reference
+    first — deleting a parameter here would only drop the local binding, leaving
+    the caller's reference (and the whole trainer graph behind it) alive into
+    the next seed's model construction. Back-to-back live models OOM the 8GB card."""
     import gc
 
     import torch
 
-    del model
     gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
@@ -86,6 +87,10 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
         argv += ["--seeds", ",".join(map(str, seeds))]
     if resume:
         argv += ["--resume"]
+    if epochs is not None:
+        argv += ["--epochs", str(epochs)]
+    if interrupt_after is not None:
+        argv += ["--interrupt-after", str(interrupt_after)]
     append_command_sh(exp_dir, argv)
 
     for seed in seeds:
@@ -175,4 +180,5 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
             if wandb_mode == "offline" and new_wandb:
                 print(f"   offline W&B run(s): {new_wandb} — sync later with: uv run wandb sync wandb/<run>")
 
-        _free_gpu(model)
+        del model
+        _free_gpu()

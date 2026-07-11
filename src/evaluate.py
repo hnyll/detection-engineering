@@ -13,7 +13,8 @@ from pathlib import Path
 
 from . import paths
 from .data_coco import build_gt, class_names, image_dir, list_images
-from .expmeta import env_versions, load_config, load_protocol, protocol_hash
+from .expmeta import (append_command_sh, env_versions, load_config, load_protocol,
+                      protocol_hash)
 
 AGG_KEYS = ("map50_95", "map50", "map75", "ap_small", "ap_medium", "ap_large",
             "latency_ms_mean", "fps_batch1")
@@ -135,6 +136,8 @@ def measure_speed(model, dataset: str, split: str, proto: dict) -> dict:
 def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) -> None:
     from ultralytics import YOLO
 
+    from .data_coco import gt_fingerprint
+
     exp_dir = paths.resolve_exp(exp_ref)
     cfg = load_config(exp_dir)
     dataset = cfg["meta"]["dataset"]
@@ -142,23 +145,35 @@ def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) 
     split = proto["split"]
     names = class_names(dataset)
     gt_json = build_gt(dataset, split)
+    gt_fp = gt_fingerprint(dataset, split)
 
+    argv = ["eval", exp_dir.name]
+    if seed is not None:
+        argv += ["--seed", str(seed)]
     if weights:
-        seeds = [(seed if seed is not None else cfg["meta"]["seeds"][0], Path(weights))]
+        argv += ["--weights", str(weights)]
+    append_command_sh(exp_dir, argv)
+
+    # (seed_label, weights_path, is_custom): ad-hoc weights never masquerade as a
+    # trained seed — their metrics go to artifacts/, not seeds/, and are not aggregated
+    if weights:
+        entries = [("custom", Path(weights), True)]
     elif seed is not None:
         w = _weights_for_seed(exp_dir, seed)
         if not w:
             raise SystemExit(f"no weights for seed {seed} — train first")
-        seeds = [(seed, w)]
+        entries = [(seed, w, False)]
     else:
-        seeds = [(s, _weights_for_seed(exp_dir, s)) for s in _seeds_with_weights(exp_dir)]
-        if not seeds:
+        entries = [(s, _weights_for_seed(exp_dir, s), False)
+                   for s in _seeds_with_weights(exp_dir)]
+        if not entries:
             raise SystemExit(f"{exp_dir.name}: no trained seeds found — train first")
 
-    for s, w in seeds:
+    for s, w, custom in entries:
         print(f"== eval {exp_dir.name} seed {s} ({w})")
         model = YOLO(str(w))
-        dets_json = exp_dir / "artifacts" / f"predictions_{split}_s{s}.json"
+        tag = f"custom_{w.stem}" if custom else f"s{s}"
+        dets_json = exp_dir / "artifacts" / f"predictions_{split}_{tag}.json"
         dets = predict_to_coco(model, dataset, split, proto, dets_json)
         acc = coco_metrics(gt_json, dets, proto["max_det"], names)
         speed = measure_speed(model, dataset, split, proto)
@@ -168,9 +183,10 @@ def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) 
             n_p, flops = 0, 0.0
         seed_metrics = {
             "protocol": {"hash": protocol_hash(), "dataset": dataset, "split": split,
-                         "imgsz": proto["imgsz"], "conf": proto["conf"],
+                         "gt": gt_fp, "imgsz": proto["imgsz"], "conf": proto["conf"],
                          "iou": proto["iou"], "max_det": proto["max_det"]},
-            "seed": s,
+            "seed": None if custom else s,
+            "custom_weights": str(w) if custom else None,
             "overall": acc["overall"],
             "per_class": acc["per_class"],
             "speed": speed,
@@ -178,24 +194,37 @@ def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) 
                       "weights": str(w)},
             "env": env_versions(),
         }
-        sdir = paths.seed_dir(exp_dir, s)
-        (sdir / "metrics.json").write_text(json.dumps(seed_metrics, indent=2) + "\n")
+        if custom:
+            out = exp_dir / "artifacts" / f"metrics_custom_{w.stem}.json"
+            print(f"   custom weights — writing {out.name}, NOT counted as a seed")
+        else:
+            out = paths.seed_dir(exp_dir, s) / "metrics.json"
+        out.write_text(json.dumps(seed_metrics, indent=2) + "\n")
         print(f"   mAP50-95={acc['overall']['map50_95']:.4f}  mAP50={acc['overall']['map50']:.4f}  "
               f"AP_s={acc['overall']['ap_small']:.4f}  {speed['latency_ms_mean']}ms/img")
 
+        del model
         from .train import _free_gpu
-        _free_gpu(model)
+        _free_gpu()
 
-    aggregate_exp(exp_dir)
+    if not any(custom for _, _, custom in entries):
+        aggregate_exp(exp_dir)
 
 
 def aggregate_exp(exp_dir: Path) -> None:
     """Merge per-seed metrics (same protocol hash) into experiment-level metrics.json."""
-    per_seed = {}
+    per_seed, newest = {}, None
     for mj in sorted(exp_dir.glob("seeds/s*/metrics.json")):
         m = json.loads(mj.read_text())
         if m["protocol"]["hash"] == protocol_hash():
             per_seed[f"s{m['seed']}"] = m
+            if newest is None or mj.stat().st_mtime > newest[0]:
+                newest = (mj.stat().st_mtime, m["protocol"].get("gt"))
+    # never average seeds evaluated against different ground truth
+    if newest and len({m["protocol"].get("gt") for m in per_seed.values()}) > 1:
+        stale = [k for k, m in per_seed.items() if m["protocol"].get("gt") != newest[1]]
+        print(f"WARNING: dropping {stale} from aggregation — evaluated against older GT; re-run eval")
+        per_seed = {k: m for k, m in per_seed.items() if k not in stale}
     if not per_seed:
         return
     first = next(iter(per_seed.values()))
@@ -218,12 +247,25 @@ def aggregate_exp(exp_dir: Path) -> None:
             aggregate[f"{key}_mean"] = round(statistics.fmean(vals), 5)
             aggregate[f"{key}_std"] = round(statistics.stdev(vals), 5) if len(vals) > 1 else None
 
+    # per-class stats across ALL seeds, not just the first
+    per_class = {}
+    for cls in first["per_class"]:
+        vals = [m["per_class"][cls]["ap50_95"] for m in per_seed.values()
+                if cls in m["per_class"]]
+        vals50 = [m["per_class"][cls]["ap50"] for m in per_seed.values()
+                  if cls in m["per_class"]]
+        per_class[cls] = {
+            "ap50_95": round(statistics.fmean(vals), 5),
+            "ap50": round(statistics.fmean(vals50), 5),
+            "ap50_95_std": round(statistics.stdev(vals), 5) if len(vals) > 1 else None,
+        }
+
     exp_metrics = {
         "protocol": first["protocol"],
         "n_seeds": len(per_seed),
         "aggregate": aggregate,
         "overall": first["overall"] if len(per_seed) == 1 else None,
-        "per_class": first["per_class"],
+        "per_class": per_class,
         "speed": first["speed"],
         "model": first["model"],
         "seeds": {k: {"map50_95": v["overall"]["map50_95"],

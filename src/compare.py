@@ -33,15 +33,20 @@ def compare(exp_refs: list[str]) -> None:
     if len(exps) < 2:
         raise SystemExit("need at least two experiments to compare")
 
-    hashes = {m["protocol"]["hash"] for _, m in exps}
-    if len(hashes) > 1:
+    # comparability identity = protocol hash + dataset + split (+ GT fingerprint
+    # when recorded) — a hash match alone would happily compare COCO128 vs VisDrone
+    idents = {(m["protocol"]["hash"], m["protocol"]["dataset"], m["protocol"]["split"],
+               m["protocol"].get("gt")) for _, m in exps}
+    if len(idents) > 1:
         for name, m in exps:
-            print(f"  {name}: protocol {m['protocol']['hash']}")
+            p = m["protocol"]
+            print(f"  {name}: protocol {p['hash']} dataset {p['dataset']}/{p['split']} "
+                  f"gt {p.get('gt')}")
         raise SystemExit(
-            "REFUSED: protocol hashes differ — results are not comparable. "
-            "Re-run eval under the current configs/protocol.yaml."
+            "REFUSED: evaluation identities differ (protocol/dataset/split/GT) — "
+            "these results are not comparable."
         )
-    if protocol_hash() not in hashes:
+    if protocol_hash() != next(iter(idents))[0]:
         raise SystemExit(
             "REFUSED: metrics were produced under an older protocol.yaml than the "
             "current one — re-run eval."
@@ -67,11 +72,11 @@ def compare(exp_refs: list[str]) -> None:
     for name, m in exps[1:]:
         mean, std = _mean_std(m, KEY)
         delta = round(mean - b_mean, 5)
-        stds = [s for s in (b_std, std) if s is not None]
-        if not stds:
-            verdict = "VARIANCE-UNKNOWN (run 3 seeds before trusting this delta)"
-        elif abs(delta) < max(stds):
-            verdict = f"INCONCLUSIVE (|Δ|={abs(delta):.5f} < max std {max(stds):.5f})"
+        if b_std is None or std is None:
+            # significance requires a variance estimate on BOTH sides
+            verdict = "VARIANCE-UNKNOWN (need ≥2 seeds on both experiments; spec says 3)"
+        elif abs(delta) < max(b_std, std):
+            verdict = f"INCONCLUSIVE (|Δ|={abs(delta):.5f} < max std {max(b_std, std):.5f})"
         else:
             verdict = "significant " + ("improvement" if delta > 0 else "regression")
         verdicts.append({"baseline": base_name, "candidate": name,
@@ -85,8 +90,11 @@ def compare(exp_refs: list[str]) -> None:
             for cls in pc_a if cls in pc_b
         }
 
+    ident = next(iter(idents))
     out = {
-        "protocol_hash": hashes.pop(),
+        "protocol_hash": ident[0],
+        "dataset": ident[1],
+        "split": ident[2],
         "metric": KEY,
         "experiments": rows,
         "verdicts": verdicts,
@@ -97,7 +105,8 @@ def compare(exp_refs: list[str]) -> None:
     (paths.COMPARISONS / f"{stem}.json").write_text(json.dumps(out, indent=2) + "\n")
 
     md = [f"# Comparison: {' vs '.join(n for n, _ in exps)}", "",
-          f"Protocol: `{out['protocol_hash']}` | metric: {KEY}", "",
+          f"Protocol: `{out['protocol_hash']}` | dataset: {out['dataset']}/{out['split']} "
+          f"| metric: {KEY}", "",
           "| exp | seeds | mAP50-95 (±std) | AP_small | ms/img | FPS | params(M) | GFLOPs |",
           "|---|---|---|---|---|---|---|---|"]
     for r in rows:

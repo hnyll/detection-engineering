@@ -7,6 +7,7 @@ COCOeval, TIDE, and the FiftyOne prediction attach. category_id = class idx + 1
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -50,10 +51,28 @@ def class_names(dataset: str) -> dict[int, str]:
     return {int(k): v for k, v in load_dataset_cfg(dataset)["names"].items()}
 
 
+def gt_fingerprint(dataset: str, split: str) -> str:
+    """Cheap dataset identity: dataset yaml + every image name + label file size.
+    Catches config edits, added/removed images, and label rewrites; a same-size
+    in-place label edit would slip through (acceptable for a cache key)."""
+    h = hashlib.sha256(dataset_yaml(dataset).read_bytes())
+    imgs = list_images(dataset, split)
+    h.update(str(len(imgs)).encode())
+    for p in imgs:
+        lbl = _label_path(p)
+        size = lbl.stat().st_size if lbl.exists() else -1
+        h.update(f"{p.name}:{size}".encode())
+    return h.hexdigest()[:16]
+
+
 def build_gt(dataset: str, split: str, force: bool = False) -> Path:
     out = COCO_GT_DIR / f"{dataset}_{split}.json"
+    fp_file = out.with_suffix(".fp")
+    fp = gt_fingerprint(dataset, split)
     if out.exists() and not force:
-        return out
+        if fp_file.exists() and fp_file.read_text().strip() == fp:
+            return out
+        print(f"GT cache stale for {dataset}/{split} (labels/config changed) — rebuilding")
     COCO_GT_DIR.mkdir(parents=True, exist_ok=True)
 
     names = class_names(dataset)
@@ -84,10 +103,12 @@ def build_gt(dataset: str, split: str, force: bool = False) -> Path:
             ann_id += 1
 
     out.write_text(json.dumps({
-        "info": {"description": f"{dataset}/{split} GT (harness-generated)"},
+        "info": {"description": f"{dataset}/{split} GT (harness-generated)",
+                 "fingerprint": fp},
         "images": images,
         "annotations": annotations,
         "categories": [{"id": i + 1, "name": n} for i, n in sorted(names.items())],
     }))
+    fp_file.write_text(fp + "\n")
     print(f"built {out.name}: {len(images)} images, {len(annotations)} boxes")
     return out

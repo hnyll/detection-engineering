@@ -3,12 +3,14 @@
     "hash": "a9b8207b3cc7a070",
     "dataset": "coco128",
     "split": "val",
+    "gt": "9f566d740eb5e01d",
     "imgsz": 640,
     "conf": 0.001,
     "iou": 0.7,
     "max_det": 300
   },
   "seed": 42,
+  "custom_weights": null,
   "overall": {
     "map50_95": 0.52865,
     "map50": 0.69738,
@@ -341,10 +343,10 @@
     }
   },
   "speed": {
-    "latency_ms_mean": 20.32,
-    "latency_ms_p50": 17.77,
-    "latency_ms_p95": 37.63,
-    "fps_batch1": 49.2,
+    "latency_ms_mean": 19.22,
+    "latency_ms_p50": 18.42,
+    "latency_ms_p95": 31.57,
+    "fps_batch1": 52.0,
     "device": "NVIDIA GeForce RTX 4060",
     "n_timed": 100
   },
@@ -357,6 +359,6 @@
     "python": "3.10.12",
     "torch": "2.9.1+cu128",
     "ultralytics": "8.4.65",
-    "git_sha": "b5ba2e1"
+    "git_sha": "fde1cd2"
   }
 }

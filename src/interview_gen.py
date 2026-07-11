@@ -1,37 +1,68 @@
-"""Interview companion: generates the four skeletons with the best experiment's
-real numbers and artifact paths pre-filled. Every claim must point at an
-artifact — the skeletons enforce that with explicit citation slots."""
+"""Interview companion: generates the four skeletons with the best real
+experiment's numbers and artifact paths pre-filled. Smoke tests are excluded,
+dataset facts come from experiment metadata (never hardcoded), and existing
+files are only overwritten with --force — they hold your edits."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-from .paths import INTERVIEW, ROOT, list_experiments, resolve_exp
+from .expmeta import load_config, load_protocol
+from .paths import COCO_GT_DIR, INTERVIEW, list_experiments, resolve_exp
+
+SMOKE_MARKERS = ("phase0", "smoke")
 
 
-def _best_exp() -> tuple[Path, dict] | tuple[None, None]:
-    best, best_m = None, None
+def _is_smoke(exp: Path) -> bool:
+    if any(m in exp.name for m in SMOKE_MARKERS):
+        return True
+    try:
+        return load_config(exp)["meta"]["dataset"] == "coco128"
+    except SystemExit:
+        return True  # unreadable config — never build interview claims on it
+
+
+def _best_exp() -> tuple[Path | None, dict | None]:
+    best, best_score, best_m = None, -1.0, None
     for e in list_experiments():
-        mj = e / "metrics.json"
-        if not mj.exists():
+        if _is_smoke(e) or not (e / "metrics.json").exists():
             continue
-        m = json.loads(mj.read_text())
+        m = json.loads((e / "metrics.json").read_text())
         score = (m.get("aggregate") or {}).get("map50_95_mean") or 0
-        if best_m is None or score > (best_m.get("aggregate") or {}).get("map50_95_mean", 0):
-            best, best_m = e, m
+        if score > best_score:
+            best, best_score, best_m = e, score, m
     return best, best_m
 
 
-def generate(exp_ref: str | None = None) -> None:
+def _dataset_facts(exp: Path) -> dict:
+    """Image/class counts from the experiment's own dataset GT, not assumptions."""
+    dataset = load_config(exp)["meta"]["dataset"]
+    split = load_protocol()["split"]
+    facts = {"dataset": dataset, "split": split, "n_images": "TODO", "n_classes": "TODO"}
+    gt = COCO_GT_DIR / f"{dataset}_{split}.json"
+    if gt.exists():
+        g = json.loads(gt.read_text())
+        facts["n_images"] = len(g["images"])
+        facts["n_classes"] = len(g["categories"])
+    return facts
+
+
+def generate(exp_ref: str | None = None, force: bool = False) -> None:
     if exp_ref:
         exp = resolve_exp(exp_ref)
-        metrics = json.loads((exp / "metrics.json").read_text()) if (exp / "metrics.json").exists() else {}
+        if _is_smoke(exp):
+            raise SystemExit(f"{exp.name} is a smoke test — interview claims must "
+                             "come from a real experiment")
+        mj = exp / "metrics.json"
+        metrics = json.loads(mj.read_text()) if mj.exists() else {}
     else:
         exp, metrics = _best_exp()
     if exp is None:
-        raise SystemExit("no experiment with metrics.json yet — eval something first")
+        raise SystemExit("no real (non-smoke) experiment with metrics.json yet — "
+                         "run a VisDrone experiment first")
 
+    facts = _dataset_facts(exp)
     agg = metrics.get("aggregate") or {}
     map_s = agg.get("map50_95_mean", "TODO")
     lat = agg.get("latency_ms_mean_mean") or (metrics.get("speed") or {}).get("latency_ms_mean", "TODO")
@@ -43,11 +74,11 @@ def generate(exp_ref: str | None = None) -> None:
     files = {
         "resume_bullet.md": f"""# Resume bullet — Action + Scale + Result + Engineering Judgment
 
-> TODO-draft: Built a controlled-experiment object detection pipeline (YOLO11 on
-> VisDrone-DET, 6.5k images / 10 classes); ran seeded ablations with fixed
-> evaluation protocol reaching mAP50-95 {map_s} at {lat} ms/img on an RTX 4060,
-> diagnosed dominant failure modes with TIDE + FiftyOne, and shipped
-> ONNX/TensorRT exports with documented numerical-drift checks.
+> TODO-draft: Built a controlled-experiment object detection pipeline (YOLO on
+> {facts['dataset']}, {facts['n_images']} {facts['split']} images / {facts['n_classes']} classes);
+> ran seeded ablations under a fixed evaluation protocol reaching mAP50-95 {map_s}
+> at {lat} ms/img on an RTX 4060, diagnosed dominant failure modes with TIDE +
+> FiftyOne, and shipped ONNX/TensorRT exports with documented drift checks.
 
 Rules: one line, quantified, mentions judgment (protocol discipline / negative
 results), no tool-soup. {cite}
@@ -55,7 +86,7 @@ results), no tool-soup. {cite}
         "star.md": f"""# STAR story — {exp.name}
 
 ## Situation
-TODO: the project context (learning harness on VisDrone, 8GB VRAM constraint).
+TODO: the project context ({facts['dataset']} under an 8GB VRAM constraint).
 
 ## Task
 TODO: what you set out to prove/improve. Cite the pre-registered prediction in
@@ -72,8 +103,8 @@ followed ({rel}/decision.md). Negative results count — say what you ruled out.
 """,
         "walkthrough.md": f"""# 2-minute project walkthrough
 
-1. **Problem** (15s): dense tiny-object detection on drone imagery; why it's hard.
-2. **Setup** (20s): YOLO11 baselines under a fixed eval protocol; W&B tracking;
+1. **Problem** (15s): dense small-object detection on {facts['dataset']}; why it's hard.
+2. **Setup** (20s): YOLO baselines under a fixed eval protocol; W&B tracking;
    8GB VRAM budget forced honest engineering tradeoffs.
 3. **Diagnosis** (30s): TIDE taxonomy + FiftyOne review of ≥100 failures —
    name the top-3 failure modes from {rel}/failure_report.md.
@@ -87,7 +118,7 @@ followed ({rel}/decision.md). Negative results count — say what you ruled out.
 """,
         "qa.md": f"""# Likely interviewer questions — evidence-based answers
 
-1. **Why is VisDrone hard for stock detectors?**
+1. **Why is {facts['dataset']} hard for stock detectors?**
    TODO — cite AP_small vs AP_large gap in {rel}/metrics.json.
 2. **How do you know improvement X is real and not noise?**
    TODO — 3-seed variance, improvement < std ⇒ inconclusive
@@ -103,6 +134,10 @@ followed ({rel}/decision.md). Negative results count — say what you ruled out.
 """,
     }
     for name, text in files.items():
-        (INTERVIEW / name).write_text(text)
+        target = INTERVIEW / name
+        if target.exists() and not force:
+            print(f"interview/{name} exists — keeping your edits (use --force to regenerate)")
+            continue
+        target.write_text(text)
         print(f"wrote interview/{name}")
     print(f"skeletons cite {rel} — replace every TODO with evidence before the gate counts it")

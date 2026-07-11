@@ -59,10 +59,12 @@ def main() -> None:
     sp.add_argument("--backend", required=True, choices=["pt", "onnx", "trt-fp16", "trt-int8"])
     sp.add_argument("--seed", type=int, default=None)
 
-    sub.add_parser("gates", help="competency exit-criteria report")
+    sp = sub.add_parser("gates", help="competency exit-criteria report")
+    sp.add_argument("--strict", action="store_true", help="exit 1 if any gate fails (CI)")
 
     sp = sub.add_parser("interview", help="generate interview companion skeletons")
     sp.add_argument("--exp", default=None)
+    sp.add_argument("--force", action="store_true", help="overwrite existing (edited) files")
 
     sub.add_parser("phase0", help="COCO128 end-to-end plumbing smoke test")
 
@@ -106,10 +108,10 @@ def main() -> None:
         bench(a.exp, backend=a.backend, seed=a.seed)
     elif a.cmd == "gates":
         from .gates import report
-        report()
+        report(strict=a.strict)
     elif a.cmd == "interview":
         from .interview_gen import generate
-        generate(exp_ref=a.exp)
+        generate(exp_ref=a.exp, force=a.force)
     elif a.cmd == "phase0":
         from .phase0 import run_phase0
         run_phase0()

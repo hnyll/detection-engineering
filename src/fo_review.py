@@ -61,7 +61,7 @@ def attach_predictions(ds, exp_dir: Path, dataset: str, split: str, seed: int) -
         img_meta[i]["file_name"]: (img_meta[i], ds_list) for i, ds_list in by_image.items()
     }
 
-    field = f"pred_{exp_dir.name}"
+    field = f"pred_{exp_dir.name}_s{seed}"
     n_boxes = 0
     for sample in ds.iter_samples(autosave=True, progress=True):
         entry = dets_by_basename.get(Path(sample.filepath).name)
@@ -98,8 +98,10 @@ def review(exp_ref: str, seed: int | None = None, launch: bool = False,
         seed = int(preds[0].stem.rsplit("_s", 1)[1])
 
     ds = ensure_fo_dataset(dataset, split)
-    field = f"pred_{exp_dir.name}"
-    eval_key = f"eval_{exp_dir.name}"
+    # seed-scoped identity: without it, `review --seed 42` after reviewing seed 17
+    # would silently show and count seed 17's boxes
+    field = f"pred_{exp_dir.name}_s{seed}"
+    eval_key = f"eval_{exp_dir.name}_s{seed}"
     if field not in ds.get_field_schema():
         attach_predictions(ds, exp_dir, dataset, split, seed)
     if eval_key not in ds.list_evaluations():
@@ -113,8 +115,8 @@ def review(exp_ref: str, seed: int | None = None, launch: bool = False,
         "tiny_gt": ds.filter_labels(
             "ground_truth", (F("bounding_box")[2] * F("bounding_box")[3]) < tiny_thresh),
         "crowded": ds.match(F("ground_truth.detections").length() > 30),
-        f"missed_{exp_dir.name}": ds.filter_labels("ground_truth", F(eval_key) == "fn"),
-        f"fp_{exp_dir.name}": ds.filter_labels(field, F(eval_key) == "fp"),
+        f"missed_{exp_dir.name}_s{seed}": ds.filter_labels("ground_truth", F(eval_key) == "fn"),
+        f"fp_{exp_dir.name}_s{seed}": ds.filter_labels(field, F(eval_key) == "fp"),
     }
     for vname, view in views.items():
         ds.save_view(vname, view, overwrite=True)
@@ -134,6 +136,7 @@ def review(exp_ref: str, seed: int | None = None, launch: bool = False,
         stats = {
             "dataset": ds.name,
             "eval_key": eval_key,
+            "pred_field": field,
             "seed": seed,
             "counts": counts,
             "reviewed_failures": fp_reviewed + fn_reviewed,

@@ -1,6 +1,8 @@
 {
+  "seed": 17,
   "weights": "/home/hnyll/detection-engineering/experiments/exp_000_phase0_smoke/seeds/s17/weights/best.pt",
-  "onnx": "experiments/exp_000_phase0_smoke/exports/best.onnx",
+  "weights_sha256": "dd06e45e10027815",
+  "onnx": "experiments/exp_000_phase0_smoke/exports/best_s17.onnx",
   "n_images": 64,
   "boxes_pt": 395,
   "boxes_onnx": 410,

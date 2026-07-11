@@ -1,19 +1,20 @@
 {
   "dataset": "coco128-val",
-  "eval_key": "eval_exp_000_phase0_smoke",
-  "seed": 17,
+  "eval_key": "eval_exp_000_phase0_smoke_s42",
+  "pred_field": "pred_exp_000_phase0_smoke_s42",
+  "seed": 42,
   "counts": {
-    "tp": 787,
-    "fp": 15610,
-    "fn": 142
+    "tp": 793,
+    "fp": 15722,
+    "fn": 136
   },
   "reviewed_failures": 0,
   "label_tags": {},
   "sample_tags": {},
   "saved_views": [
     "crowded",
-    "fp_exp_000_phase0_smoke",
-    "missed_exp_000_phase0_smoke",
+    "fp_exp_000_phase0_smoke_s42",
+    "missed_exp_000_phase0_smoke_s42",
     "tiny_gt"
   ],
   "condition_tags_expected": [

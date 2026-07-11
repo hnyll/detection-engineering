@@ -1,0 +1,11 @@
+{
+  "best_s17.onnx": {
+    "seed": 17,
+    "source": "/home/hnyll/detection-engineering/runs/exp_000_phase0_smoke_s17/weights/best.pt",
+    "source_sha256": "dd06e45e10027815",
+    "opts": {
+      "format": "onnx",
+      "imgsz": 640
+    }
+  }
+}

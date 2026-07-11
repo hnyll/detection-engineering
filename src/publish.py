@@ -30,13 +30,12 @@ def _git(*args: str, check: bool = True) -> subprocess.CompletedProcess:
     return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=check)
 
 
-def _scan_staged() -> None:
-    staged = [l for l in _git("diff", "--cached", "--name-only").stdout.splitlines() if l]
-    bad_paths = [p for p in staged if FORBIDDEN_STAGED.search(p)]
+def _scan_files(files: list[str], action: str) -> None:
+    bad_paths = [p for p in files if FORBIDDEN_STAGED.search(p)]
     if bad_paths:
-        raise SystemExit(f"REFUSING to commit forbidden paths (weights/data/env): {bad_paths}")
+        raise SystemExit(f"REFUSING to {action} forbidden paths (weights/data/env): {bad_paths}")
     hits = []
-    for p in staged:
+    for p in files:
         f = ROOT / p
         if not f.is_file() or f.stat().st_size > 1_000_000:
             continue
@@ -49,8 +48,23 @@ def _scan_staged() -> None:
             if m:
                 hits.append(f"{p}: {m.group(0)[:24]}…")
     if hits:
-        raise SystemExit("REFUSING to commit possible secrets:\n  " + "\n  ".join(hits))
-    print(f"secret scan clean ({len(staged)} staged files)")
+        raise SystemExit(f"REFUSING to {action} possible secrets:\n  " + "\n  ".join(hits))
+    print(f"secret scan clean ({len(files)} files, {action})")
+
+
+def _scan_staged() -> None:
+    staged = [l for l in _git("diff", "--cached", "--name-only").stdout.splitlines() if l]
+    _scan_files(staged, "commit")
+
+
+def _outgoing_files() -> list[str]:
+    """Files touched by commits that a push would publish."""
+    upstream = _git("rev-parse", "--verify", "origin/main", check=False)
+    if upstream.returncode == 0:
+        out = _git("diff", "--name-only", "origin/main..HEAD").stdout
+    else:  # first push publishes the whole tree
+        out = _git("ls-files").stdout
+    return [l for l in out.splitlines() if l]
 
 
 def _commit(message: str) -> None:
@@ -74,9 +88,10 @@ def _create_remote() -> None:
         return
     login = _gh_login()
     url = f"https://github.com/{login}/{REPO_NAME}.git"
+    # no --push here: publishing history is _push's job, behind its secret scan
     modern = subprocess.run(
         ["gh", "repo", "create", REPO_NAME, "--private", "--source=.",
-         "--remote=origin", "--push"],
+         "--remote=origin"],
         cwd=ROOT, capture_output=True, text=True,
     )
     if modern.returncode == 0:
@@ -95,6 +110,8 @@ def _create_remote() -> None:
 
 
 def _push() -> None:
+    _git("fetch", "origin", check=False)  # so the outgoing range is accurate
+    _scan_files(_outgoing_files(), "push")
     r = _git("push", "-u", "origin", "main", check=False)
     if r.returncode != 0:
         raise SystemExit(f"push failed: {r.stderr.strip()}")

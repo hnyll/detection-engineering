@@ -71,7 +71,8 @@ def _checks() -> dict[str, list[tuple[str, bool, str]]]:
     reviewed_100 = [e for e, r in reviews.items() if r.get("reviewed_failures", 0) >= 100]
     fr_filled = [e for e in exps if _differs_from_template(e, "failure_report.md")]
     top3 = [e for e in fr_filled
-            if re.search(r"^1\.\s*\S+", (e / "failure_report.md").read_text(), re.M)]
+            if all(re.search(rf"^{i}\.\s*\S+", (e / "failure_report.md").read_text(), re.M)
+                   for i in (1, 2, 3))]
 
     hyp_filled = [e for e in exps if _differs_from_template(e, "hypothesis.md")]
     decided = [e for e in exps if _frontmatter(e).get("outcome") in
@@ -83,8 +84,8 @@ def _checks() -> dict[str, list[tuple[str, bool, str]]]:
     cmp_complete = [c for c in cmps if c.get("experiments") and all(
         row.get(k) is not None for row in c["experiments"]
         for k in ("latency_ms", "fps", "params_m", "gflops"))]
-    cmp_3seed = [c for c in cmps
-                 if any(row.get("n_seeds", 0) >= 3 for row in c.get("experiments", []))]
+    cmp_3seed = [c for c in cmps if c.get("experiments")
+                 and all(row.get("n_seeds", 0) >= 3 for row in c["experiments"])]
 
     parities = [e for e in exps if (e / "exports" / "parity_report.json").exists()]
     benches = {e: _json(e / "exports" / "bench.json") for e in exps}
@@ -95,8 +96,14 @@ def _checks() -> dict[str, list[tuple[str, bool, str]]]:
     coreml_ok = bool(coreml_exports) or coreml_manual
 
     interview_files = ["resume_bullet.md", "star.md", "walkthrough.md", "qa.md"]
-    iv_ok = [f for f in interview_files
-             if (INTERVIEW / f).exists() and "experiments/exp_" in (INTERVIEW / f).read_text()]
+    iv_ok = []
+    for f in interview_files:
+        p = INTERVIEW / f
+        if p.exists():
+            text = p.read_text()
+            # untouched skeletons still contain TODO markers — those don't count
+            if "experiments/exp_" in text and "TODO" not in text:
+                iv_ok.append(f)
 
     return {
         "1. Train": [
@@ -139,7 +146,7 @@ def _checks() -> dict[str, list[tuple[str, bool, str]]]:
     }
 
 
-def report() -> None:
+def report(strict: bool = False) -> None:
     all_pass = True
     for comp, checks in _checks().items():
         ok = all(c[1] for c in checks)
@@ -150,3 +157,5 @@ def report() -> None:
             print(f"  {mark} {label}" + (f"  [{detail}]" if detail else ""))
     print("\n" + ("ALL COMPETENCIES PASS 🎉" if all_pass
                   else "Gates are honest — unmet criteria mean the work isn't done yet."))
+    if strict and not all_pass:
+        raise SystemExit(1)  # enforceable in CI: `gates --strict`

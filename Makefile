@@ -38,8 +38,8 @@ parity:           ## pt vs onnx numerical drift report
 bench:            ## make bench EXP=... ARGS="--backend trt-fp16"
 	$(CLI) bench $(EXP) $(ARGS)
 
-gates:            ## competency exit-criteria report
-	$(CLI) gates
+gates:            ## competency exit-criteria report [ARGS="--strict"]
+	$(CLI) gates $(ARGS)
 
 interview:        ## generate interview companion skeletons
 	$(CLI) interview $(ARGS)

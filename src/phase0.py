@@ -70,12 +70,19 @@ CONFIG = {
 
 
 def _ensure_exp():
-    for d in paths.list_experiments():
-        if d.name.endswith(f"_{SMOKE_NAME}"):
-            return d
-    new_experiment(SMOKE_NAME)
-    exp = [d for d in paths.list_experiments() if d.name.endswith(f"_{SMOKE_NAME}")][0]
-    (exp / "config.yaml").write_text(yaml.safe_dump(CONFIG, sort_keys=False))
+    exp = next((d for d in paths.list_experiments()
+                if d.name.endswith(f"_{SMOKE_NAME}")), None)
+    if exp is None:
+        new_experiment(SMOKE_NAME)
+        exp = next(d for d in paths.list_experiments()
+                   if d.name.endswith(f"_{SMOKE_NAME}"))
+    # phase0 owns this experiment: always restore the canonical 3-epoch COCO128
+    # config — a leftover template config (visdrone, 100 epochs) must never
+    # masquerade as the smoke test
+    current = yaml.safe_load((exp / "config.yaml").read_text()) if (exp / "config.yaml").exists() else None
+    if current != CONFIG:
+        (exp / "config.yaml").write_text(yaml.safe_dump(CONFIG, sort_keys=False))
+        print(f"restored canonical phase0 config in {exp.name}")
     (exp / "hypothesis.md").write_text(HYPOTHESIS.format(exp=exp.name))
     return exp
 
