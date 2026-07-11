@@ -1,0 +1,40 @@
+[project]
+name = "detection-engineering"
+version = "0.1.0"
+description = "Competency-based object detection engineering harness: YOLO11 on VisDrone with W&B, FiftyOne, TIDE, and deployment benchmarks"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "torch==2.9.1",
+    "torchvision==0.24.1",
+    "ultralytics==8.4.65",
+    "numpy==1.26.4",          # deliberate: tidecv / onnxruntime / fiftyone / torch all compatible
+    "pycocotools==2.0.8",
+    "wandb==0.19.11",
+    "fiftyone==1.5.2",
+    "sahi==0.11.20",
+    "tidecv==1.0.1",
+    "onnx==1.17.0",
+    "onnxruntime-gpu==1.20.1",
+    "onnxslim==0.1.48",
+    "coremltools==8.2",
+    "matplotlib==3.9.2",
+    "pandas==2.2.3",
+    "PyYAML==6.0.2",
+]
+
+[dependency-groups]
+# TensorRT is heavy (~2GB) and only needed for the Deploy competency's engine
+# benchmarks; kept in its own group so a resolution failure never blocks the core env.
+trt = ["tensorrt-cu12==10.9.0.34"]
+
+[tool.uv]
+package = false
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128" }]
+torchvision = [{ index = "pytorch-cu128" }]

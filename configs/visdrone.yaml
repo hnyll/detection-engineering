@@ -1,0 +1,20 @@
+# VisDrone-DET 2019, YOLO-format labels (normalized cls cx cy w h, classes 0-9).
+# data/visdrone is a symlink to the existing local copy — run `make data` once.
+# 6471 train / 548 val / 1610 test images. Expect ~20 mAP50-95 at 640px from a
+# stock n/s baseline; low numbers are the point (rich failure modes).
+path: /home/hnyll/detection-engineering/data/visdrone
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: pedestrian
+  1: people
+  2: bicycle
+  3: car
+  4: van
+  5: truck
+  6: tricycle
+  7: awning-tricycle
+  8: bus
+  9: motor

@@ -1,0 +1,25 @@
+# environments
+.venv/
+__pycache__/
+*.pyc
+.env
+
+# datasets (symlinks + auto-downloads) and training runs
+data/
+runs/
+wandb/
+
+# model artifacts — never committed (repo may go public)
+*.pt
+*.onnx
+*.engine
+*.mlpackage
+*.mlmodel
+*.npy
+*.cache
+
+# heavy per-experiment artifacts; the knowledge (configs, md reports,
+# metrics.json, tide_report.json, small plots) stays committed
+experiments/**/artifacts/predictions*
+experiments/**/artifacts/crops/
+experiments/**/seeds/*/weights/

@@ -1,0 +1,15 @@
+# Experiment config. `meta` drives the harness; `train` is passed to Ultralytics
+# on top of machine-safe defaults (workers=2, amp=True, cache=False — see src/train.py).
+meta:
+  name: "{NAME}"
+  parent_exp: null            # control experiment this branches from
+  dataset: visdrone           # visdrone | coco128 (must match a configs/<dataset>.yaml)
+  seeds: [17]                 # [17, 42, 1337] for variance-measured comparisons
+  causal_variable: ""         # the ONE thing changed vs parent
+  compensating_changes: []    # e.g. "batch 16->8: VRAM at imgsz 1024"
+
+train:
+  model: yolo11n.pt
+  imgsz: 640
+  epochs: 100
+  batch: 16                   # explicit — never auto (-1) on the 8GB 4060
