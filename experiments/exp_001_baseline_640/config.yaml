@@ -1,0 +1,16 @@
+# Phase 1 baseline: stock YOLO11n, 640px, VisDrone-DET.
+# meta drives the harness; train is passed to Ultralytics on top of
+# machine-safe defaults (workers=2, amp=True, cache=False — see src/train.py).
+meta:
+  name: baseline_640
+  parent_exp: null            # this IS the baseline
+  dataset: visdrone
+  seeds: [17, 42, 1337]       # spec: measure baseline variance with 3 seeds
+  causal_variable: "none — baseline establishment"
+  compensating_changes: []
+
+train:
+  model: yolo11n.pt
+  imgsz: 640
+  epochs: 100
+  batch: 16                   # explicit — never auto (-1) on the 8GB 4060
