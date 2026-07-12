@@ -28,20 +28,43 @@ def _dataset_name(dataset: str, split: str) -> str:
 
 
 def ensure_fo_dataset(dataset: str, split: str):
+    """Build the FiftyOne dataset directly from the harness GT json — the same
+    file COCOeval and TIDE consume, so all three tools see identical ground
+    truth. (The YOLOv5 importer is unusable here: VisDrone image dirs hold .npy
+    caches whose stems match label files, and it crashes on their media type.)"""
     import fiftyone as fo
 
     name = _dataset_name(dataset, split)
+    gt = json.loads(build_gt(dataset, split).read_text())
     if name in fo.list_datasets():
-        return fo.load_dataset(name)
-    print(f"importing {name} into FiftyOne (one-time)")
-    ds = fo.Dataset.from_dir(
-        dataset_type=fo.types.YOLOv5Dataset,
-        yaml_path=str(paths.dataset_yaml(dataset)),
-        split=split,
-        label_field="ground_truth",
-        include_all_data=True,  # keep label-less images so FP counts match COCOeval
-        name=name,
-    )
+        ds = fo.load_dataset(name)
+        if len(ds) == len(gt["images"]):
+            return ds
+        print(f"partial dataset '{name}' found (earlier crash) — rebuilding")
+        fo.delete_dataset(name)
+
+    print(f"building {name} in FiftyOne from harness GT (one-time)")
+    names = class_names(dataset)
+    img_dir = image_dir(dataset, split)
+    anns_by_img = defaultdict(list)
+    for a in gt["annotations"]:
+        anns_by_img[a["image_id"]].append(a)
+
+    samples = []
+    for im in gt["images"]:
+        W, H = im["width"], im["height"]
+        dets = [
+            fo.Detection(
+                label=names[a["category_id"] - 1],
+                bounding_box=[a["bbox"][0] / W, a["bbox"][1] / H,
+                              a["bbox"][2] / W, a["bbox"][3] / H],
+            )
+            for a in anns_by_img.get(im["id"], [])
+        ]
+        samples.append(fo.Sample(filepath=str(img_dir / im["file_name"]),
+                                 ground_truth=fo.Detections(detections=dets)))
+    ds = fo.Dataset(name)
+    ds.add_samples(samples)
     ds.persistent = True
     return ds
 
@@ -95,10 +118,14 @@ def review(exp_ref: str, seed: int | None = None, launch: bool = False,
     dataset = cfg["meta"]["dataset"]
     split = load_protocol()["split"]
     if seed is None:
-        preds = sorted(exp_dir.glob(f"artifacts/predictions_{split}_s*.json"))
-        if not preds:
-            raise SystemExit(f"{exp_dir.name}: no predictions — run eval first")
-        seed = int(preds[0].stem.rsplit("_s", 1)[1])
+        # config seed order, matching export/parity defaults (lexicographic file
+        # order would pick s1337 over s17)
+        for s in cfg["meta"]["seeds"]:
+            if (exp_dir / "artifacts" / f"predictions_{split}_s{s}.json").exists():
+                seed = s
+                break
+        if seed is None:
+            raise SystemExit(f"{exp_dir.name}: no predictions for config seeds — run eval first")
 
     from .expmeta import append_command_sh, file_sha16
 

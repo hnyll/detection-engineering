@@ -1,0 +1,30 @@
+{
+  "dataset": "visdrone-val-7ada432f",
+  "eval_key": "eval_exp_001_baseline_640_s17_20da4576",
+  "pred_field": "pred_exp_001_baseline_640_s17_20da4576",
+  "predictions_sha256": "20da457699a421e7",
+  "seed": 17,
+  "counts": {
+    "tp": 23131,
+    "fp": 128910,
+    "fn": 15628
+  },
+  "reviewed_failures": 0,
+  "label_tags": {},
+  "sample_tags": {},
+  "saved_views": [
+    "crowded",
+    "fp_exp_001_baseline_640_s17",
+    "missed_exp_001_baseline_640_s17",
+    "tiny_gt"
+  ],
+  "condition_tags_expected": [
+    "tiny",
+    "crowded",
+    "occluded",
+    "blur",
+    "low-light",
+    "truncation",
+    "reviewed"
+  ]
+}

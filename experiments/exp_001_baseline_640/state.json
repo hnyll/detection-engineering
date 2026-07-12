@@ -1,0 +1,49 @@
+{
+  "runs": [
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_001_baseline_640_s17",
+      "status": "completed",
+      "planned_interrupt": null,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "0tay4osc",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4103,
+        "max_child": 4103
+      },
+      "timestamp": "2026-07-12T09:16:41+00:00"
+    },
+    {
+      "seed": 42,
+      "run_dir": "runs/exp_001_baseline_640_s42",
+      "status": "completed",
+      "planned_interrupt": null,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "xc1ov3xg",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4112,
+        "max_child": 4112
+      },
+      "timestamp": "2026-07-12T11:53:53+00:00"
+    },
+    {
+      "seed": 1337,
+      "run_dir": "runs/exp_001_baseline_640_s1337",
+      "status": "completed",
+      "planned_interrupt": null,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "u9fy9127",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4071,
+        "max_child": 4071
+      },
+      "timestamp": "2026-07-12T14:26:57+00:00"
+    }
+  ]
+}

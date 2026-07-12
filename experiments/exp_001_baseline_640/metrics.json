@@ -1,0 +1,124 @@
+{
+  "protocol": {
+    "hash": "a9b8207b3cc7a070",
+    "dataset": "visdrone",
+    "split": "val",
+    "gt": "7ada432ff36fe090",
+    "imgsz": 640,
+    "conf": 0.001,
+    "iou": 0.7,
+    "max_det": 300
+  },
+  "n_seeds": 3,
+  "aggregate": {
+    "map50_95_mean": 0.17049,
+    "map50_95_std": 0.00074,
+    "map50_mean": 0.29454,
+    "map50_std": 0.0013,
+    "map75_mean": 0.1681,
+    "map75_std": 0.00074,
+    "ap_small_mean": 0.08731,
+    "ap_small_std": 0.00155,
+    "ap_medium_mean": 0.26205,
+    "ap_medium_std": 0.00059,
+    "ap_large_mean": 0.41504,
+    "ap_large_std": 0.02871,
+    "latency_ms_mean_mean": 23.32667,
+    "latency_ms_mean_std": 10.12833,
+    "fps_batch1_mean": 50.13333,
+    "fps_batch1_std": 25.68391
+  },
+  "overall": null,
+  "per_class": {
+    "pedestrian": {
+      "ap50_95": 0.14201,
+      "ap50": 0.33881,
+      "ap50_95_std": 0.00196
+    },
+    "people": {
+      "ap50_95": 0.08443,
+      "ap50": 0.23834,
+      "ap50_95_std": 0.00255
+    },
+    "bicycle": {
+      "ap50_95": 0.02994,
+      "ap50": 0.06971,
+      "ap50_95_std": 0.00042
+    },
+    "car": {
+      "ap50_95": 0.49655,
+      "ap50": 0.74417,
+      "ap50_95_std": 0.00068
+    },
+    "van": {
+      "ap50_95": 0.19798,
+      "ap50": 0.26929,
+      "ap50_95_std": 0.00301
+    },
+    "truck": {
+      "ap50_95": 0.17112,
+      "ap50": 0.25755,
+      "ap50_95_std": 0.00704
+    },
+    "tricycle": {
+      "ap50_95": 0.09571,
+      "ap50": 0.17382,
+      "ap50_95_std": 0.0063
+    },
+    "awning-tricycle": {
+      "ap50_95": 0.04587,
+      "ap50": 0.07176,
+      "ap50_95_std": 0.00268
+    },
+    "bus": {
+      "ap50_95": 0.29705,
+      "ap50": 0.42338,
+      "ap50_95_std": 0.00193
+    },
+    "motor": {
+      "ap50_95": 0.1442,
+      "ap50": 0.35855,
+      "ap50_95_std": 0.00125
+    }
+  },
+  "speed": {
+    "latency_ms_mean": 12.63,
+    "latency_ms_p50": 12.09,
+    "latency_ms_p95": 17.18,
+    "fps_batch1": 79.2,
+    "device": "NVIDIA GeForce RTX 4060",
+    "n_timed": 100
+  },
+  "model": {
+    "params_m": 2.584,
+    "gflops": 6.32,
+    "weights": "/home/hnyll/detection-engineering/experiments/exp_001_baseline_640/seeds/s1337/weights/best.pt",
+    "weights_sha256": "cd01e33f98408f65"
+  },
+  "seeds": {
+    "s1337": {
+      "map50_95": 0.17132,
+      "map50": 0.29553,
+      "ap_small": 0.08907,
+      "weights_sha256": "cd01e33f98408f65"
+    },
+    "s17": {
+      "map50_95": 0.17026,
+      "map50": 0.29306,
+      "ap_small": 0.08616,
+      "weights_sha256": "18fd51e8ebc0ed6b"
+    },
+    "s42": {
+      "map50_95": 0.16989,
+      "map50": 0.29502,
+      "ap_small": 0.0867,
+      "weights_sha256": "d86f3b0e42ea4dde"
+    }
+  },
+  "env": {
+    "python": "3.10.12",
+    "torch": "2.9.1+cu128",
+    "ultralytics": "8.4.65",
+    "git_sha": "83fa8a0"
+  }
+}
