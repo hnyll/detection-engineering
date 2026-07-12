@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import paths
-from .expmeta import append_command_sh, load_config, load_state, save_state
+from .expmeta import append_command_sh, file_sha16, load_config, load_state, save_state
 
 # Hard machine-safety defaults for the 8GB 4060 / 11GB WSL2 box (docs/machine_notes.md).
 # Experiment config.yaml `train:` values are applied on top, but workers/cache are
@@ -23,6 +23,11 @@ SAFE_DEFAULTS = {
     "deterministic": True,
 }
 MAX_WORKERS = 2
+
+
+class _PlannedInterrupt(Exception):
+    """Raised by the phase0 resume-proof callback. Distinct from KeyboardInterrupt
+    so a user's Ctrl-C (even during a phase0 run) is never mistaken for the plan."""
 
 
 def _wandb_mode() -> str:
@@ -104,12 +109,18 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
         if epochs is not None:
             train_args["epochs"] = epochs
 
+        resume_sha = None
         if resume:
+            if epochs is not None:
+                raise SystemExit("--epochs cannot change on --resume: ultralytics "
+                                 "restores the checkpoint's args, so the override "
+                                 "would be silently ignored — start a new run instead")
             last = rdir / "weights" / "last.pt"
             if not last.exists():
                 raise SystemExit(f"--resume: no checkpoint at {last}")
+            resume_sha = file_sha16(last)  # digest of the INPUT checkpoint, pre-overwrite
             model = YOLO(str(last))
-            print(f"== {exp_dir.name} seed {seed}: resuming from {last}")
+            print(f"== {exp_dir.name} seed {seed}: resuming from {last} (ckpt {resume_sha})")
         else:
             model = YOLO(train_args.pop("model", "yolo11n.pt"))
             print(f"== {exp_dir.name} seed {seed}: training ({wandb_mode} W&B)")
@@ -117,7 +128,7 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
         if interrupt_after is not None:
             def _interrupt(trainer, _n=interrupt_after):
                 if trainer.epoch + 1 >= _n:  # trainer.epoch is 0-indexed
-                    raise KeyboardInterrupt(f"harness: planned interrupt after epoch {_n}")
+                    raise _PlannedInterrupt(f"planned interrupt after epoch {_n}")
             model.add_callback("on_fit_epoch_end", _interrupt)
 
         # Own the W&B run: the ultralytics callback derives the project name from
@@ -132,7 +143,7 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
         run_id = wb_run.id
 
         before = _list_wandb_runs()
-        interrupted = False
+        interrupted = planned = False
         try:
             if resume:
                 model.train(resume=True)
@@ -145,12 +156,12 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
                     exist_ok=True,
                     **{k: v for k, v in train_args.items() if k != "model"},
                 )
+        except _PlannedInterrupt:
+            interrupted = planned = True
+            print(f"== planned interrupt (checkpoint at {rdir / 'weights' / 'last.pt'})")
         except KeyboardInterrupt:
             interrupted = True
-            if interrupt_after is not None:
-                print(f"== planned interrupt (checkpoint at {rdir / 'weights' / 'last.pt'})")
-            else:
-                print(f"== cancelled by user (checkpoint at {rdir / 'weights' / 'last.pt'})")
+            print(f"== cancelled by user (checkpoint at {rdir / 'weights' / 'last.pt'})")
         finally:
             if wandb.run is not None:  # normal completion is finished by the callback
                 wandb.run.finish()
@@ -161,7 +172,9 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
             "seed": seed,
             "run_dir": str(rdir.relative_to(paths.ROOT)),
             "status": "interrupted" if interrupted else "completed",
-            "resumed_from": str(rdir / "weights" / "last.pt") if resume else None,
+            "planned_interrupt": planned if interrupted else None,
+            "resumed_from": ({"path": str(rdir / "weights" / "last.pt"),
+                              "sha256": resume_sha} if resume else None),
             "wandb_mode": wandb_mode,
             "wandb_id": run_id,
             "wandb_runs": new_wandb,
@@ -170,7 +183,7 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
         })
         save_state(exp_dir, state)
 
-        if interrupted and interrupt_after is None:
+        if interrupted and not planned:
             # genuine Ctrl-C: state is recorded, now propagate the cancellation
             # instead of silently moving on to the next seed
             raise KeyboardInterrupt

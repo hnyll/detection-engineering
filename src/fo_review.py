@@ -20,7 +20,11 @@ CONDITION_TAGS = ("tiny", "crowded", "occluded", "blur", "low-light", "truncatio
 
 
 def _dataset_name(dataset: str, split: str) -> str:
-    return f"{dataset}-{split}"
+    # GT fingerprint in the name: changed labels/images produce a NEW FiftyOne
+    # dataset instead of silently reusing stale ground truth; the old dataset
+    # (with its review tags) stays available under its old name
+    from .data_coco import gt_fingerprint
+    return f"{dataset}-{split}-{gt_fingerprint(dataset, split)[:8]}"
 
 
 def ensure_fo_dataset(dataset: str, split: str):
@@ -42,7 +46,8 @@ def ensure_fo_dataset(dataset: str, split: str):
     return ds
 
 
-def attach_predictions(ds, exp_dir: Path, dataset: str, split: str, seed: int) -> str:
+def attach_predictions(ds, exp_dir: Path, dataset: str, split: str, seed: int,
+                       field: str) -> str:
     """Attach the experiment's COCO dets json as a label field; returns field name."""
     import fiftyone as fo
 
@@ -60,8 +65,6 @@ def attach_predictions(ds, exp_dir: Path, dataset: str, split: str, seed: int) -
     dets_by_basename = {
         img_meta[i]["file_name"]: (img_meta[i], ds_list) for i, ds_list in by_image.items()
     }
-
-    field = f"pred_{exp_dir.name}_s{seed}"
     n_boxes = 0
     for sample in ds.iter_samples(autosave=True, progress=True):
         entry = dets_by_basename.get(Path(sample.filepath).name)
@@ -97,31 +100,27 @@ def review(exp_ref: str, seed: int | None = None, launch: bool = False,
             raise SystemExit(f"{exp_dir.name}: no predictions — run eval first")
         seed = int(preds[0].stem.rsplit("_s", 1)[1])
 
-    from .expmeta import file_sha16
-
-    ds = ensure_fo_dataset(dataset, split)
-    # seed-scoped identity: without it, `review --seed 42` after reviewing seed 17
-    # would silently show and count seed 17's boxes
-    field = f"pred_{exp_dir.name}_s{seed}"
-    eval_key = f"eval_{exp_dir.name}_s{seed}"
+    from .expmeta import append_command_sh, file_sha16
 
     dets_json = exp_dir / "artifacts" / f"predictions_{split}_s{seed}.json"
     if not dets_json.exists():
         raise SystemExit(f"no {dets_json.name} — run eval first")
     dets_sha = file_sha16(dets_json)
-    info = dict(ds.info or {})
-    if field in ds.get_field_schema() and info.get(f"prov_{field}") != dets_sha:
-        # the seed was re-evaluated (e.g. after retraining) — stale boxes must go
-        print(f"predictions changed since last review — refreshing '{field}'")
-        if eval_key in ds.list_evaluations():
-            ds.delete_evaluation(eval_key)
-        ds.delete_sample_field(field)
+
+    argv = ["review", exp_dir.name, "--seed", str(seed)]
+    argv += ["--launch"] if launch else []
+    argv += ["--export-stats"] if export_stats else []
+    append_command_sh(exp_dir, argv)
+
+    ds = ensure_fo_dataset(dataset, split)
+    # identity = experiment + seed + predictions digest: re-evaluated predictions
+    # get a NEW field/eval instead of overwriting — earlier review tags survive
+    # on their own (now non-current) field
+    field = f"pred_{exp_dir.name}_s{seed}_{dets_sha[:8]}"
+    eval_key = f"eval_{exp_dir.name}_s{seed}_{dets_sha[:8]}"
 
     if field not in ds.get_field_schema():
-        attach_predictions(ds, exp_dir, dataset, split, seed)
-        info[f"prov_{field}"] = dets_sha
-        ds.info = info
-        ds.save()
+        attach_predictions(ds, exp_dir, dataset, split, seed, field)
     if eval_key not in ds.list_evaluations():
         print(f"evaluating '{field}' vs ground_truth (eval_key={eval_key})")
         ds.evaluate_detections(field, gt_field="ground_truth", eval_key=eval_key,
@@ -157,6 +156,7 @@ def review(exp_ref: str, seed: int | None = None, launch: bool = False,
             "dataset": ds.name,
             "eval_key": eval_key,
             "pred_field": field,
+            "predictions_sha256": dets_sha,
             "seed": seed,
             "counts": counts,
             "reviewed_failures": fp_reviewed + fn_reviewed,

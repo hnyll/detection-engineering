@@ -42,6 +42,18 @@ def file_sha16(p: Path | str) -> str:
     return hashlib.sha256(Path(p).resolve().read_bytes()).hexdigest()[:16]
 
 
+def stale_seeds(exp_dir: Path, metrics: dict) -> list[str]:
+    """Seeds whose recorded checkpoint digest no longer matches the checkpoint on
+    disk — their metrics describe a model that no longer exists."""
+    out = []
+    for sk, sv in (metrics.get("seeds") or {}).items():
+        recorded = sv.get("weights_sha256")
+        w = exp_dir / "seeds" / sk / "weights" / "best.pt"
+        if recorded and w.exists() and file_sha16(w) != recorded:
+            out.append(sk)
+    return out
+
+
 # -- decision.md frontmatter ---------------------------------------------------
 
 def read_frontmatter(md_path: Path) -> dict:

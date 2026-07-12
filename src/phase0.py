@@ -59,7 +59,9 @@ CONFIG = {
         "name": SMOKE_NAME,
         "parent_exp": None,
         "dataset": "coco128",
-        "seeds": [17],
+        # both seeds phase0 actually trains — eval/aggregation are config-driven,
+        # so an undeclared seed would be excluded (and a lingering one ignored)
+        "seeds": [17, 42],
         "causal_variable": "none — plumbing smoke test",
         "compensating_changes": [],
     },

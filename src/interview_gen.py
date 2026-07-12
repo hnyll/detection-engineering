@@ -33,10 +33,15 @@ def _is_smoke(exp: Path, metrics: dict | None) -> bool:
 
 
 def _best_exp() -> tuple[Path | None, dict | None]:
+    from .expmeta import stale_seeds
+
     best, best_score, best_m = None, -1.0, None
     for e in list_experiments():
         m = _metrics(e)
         if m is None or _is_smoke(e, m):
+            continue
+        if stale_seeds(e, m):
+            print(f"skipping {e.name}: metrics predate a retrained checkpoint — re-run eval")
             continue
         score = (m.get("aggregate") or {}).get("map50_95_mean") or 0
         if score > best_score:
@@ -61,6 +66,8 @@ def generate(exp_ref: str | None = None, force: bool = False) -> None:
     from .expmeta import protocol_hash
 
     if exp_ref:
+        from .expmeta import stale_seeds
+
         exp = resolve_exp(exp_ref)
         metrics = _metrics(exp)
         if metrics is None:
@@ -68,6 +75,9 @@ def generate(exp_ref: str | None = None, force: bool = False) -> None:
         if _is_smoke(exp, metrics):
             raise SystemExit(f"{exp.name} is a smoke test — interview claims must "
                              "come from a real experiment")
+        if stale_seeds(exp, metrics):
+            raise SystemExit(f"{exp.name} metrics predate a retrained checkpoint — "
+                             "re-run eval before citing them")
     else:
         exp, metrics = _best_exp()
     if exp is None:

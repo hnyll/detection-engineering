@@ -42,3 +42,18 @@ uv run python -m src.cli eval exp_000_phase0_smoke
 
 # 2026-07-12T04:32:44+00:00 | git 9b3a02e | torch 2.9.1+cu128 | ultralytics 8.4.65
 uv run python -m src.cli eval exp_000_phase0_smoke
+
+# 2026-07-12T05:28:31+00:00 | git ee19924 | torch 2.9.1+cu128 | ultralytics 8.4.65
+uv run python -m src.cli eval exp_000_phase0_smoke
+
+# 2026-07-12T05:28:54+00:00 | git ee19924 | torch 2.9.1+cu128 | ultralytics 8.4.65
+uv run python -m src.cli tide exp_000_phase0_smoke
+
+# 2026-07-12T05:28:59+00:00 | git ee19924 | torch 2.9.1+cu128 | ultralytics 8.4.65
+uv run python -m src.cli review exp_000_phase0_smoke --seed 17 --export-stats
+
+# 2026-07-12T05:31:00+00:00 | git ee19924 | torch 2.9.1+cu128 | ultralytics 8.4.65
+uv run python -m src.cli parity exp_000_phase0_smoke --seed 17
+
+# 2026-07-12T05:31:00+00:00 | git ee19924 | torch 2.9.1+cu128 | ultralytics 8.4.65
+uv run python -m src.cli export exp_000_phase0_smoke --format onnx --seed 17

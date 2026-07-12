@@ -141,9 +141,14 @@ def run_tide(exp_ref: str, seed: int | None = None) -> None:
         print(f"tidecv failed ({type(e).__name__}: {e}); using greedy-count fallback")
         report = _fallback_counts(gt_json, dets_json)
 
+    from .expmeta import append_command_sh, file_sha16
+    append_command_sh(exp_dir, ["tide", exp_dir.name]
+                      + (["--seed", str(seed)] if seed is not None else []))
+
     report["dataset"] = dataset
     report["split"] = split
     report["predictions"] = dets_json.name
+    report["predictions_sha256"] = file_sha16(dets_json)
     out = exp_dir / "tide_report.json"
     out.write_text(json.dumps(report, indent=2) + "\n")
     print(f"wrote {out.relative_to(paths.ROOT)} (method={report['method']})")

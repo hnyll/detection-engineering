@@ -167,10 +167,17 @@ def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) 
             raise SystemExit(f"no weights for seed {seed} — train first")
         entries = [(seed, w, False)]
     else:
+        # config-declared seeds only — a lingering seed dir from another
+        # experiment iteration must not silently join the aggregate
+        cfg_seeds = cfg["meta"]["seeds"]
         entries = [(s, _weights_for_seed(exp_dir, s), False)
-                   for s in _seeds_with_weights(exp_dir)]
+                   for s in cfg_seeds if _weights_for_seed(exp_dir, s)]
+        extra = [s for s in _seeds_with_weights(exp_dir) if s not in cfg_seeds]
+        if extra:
+            print(f"ignoring seed dirs not declared in config.yaml: {extra} "
+                  f"(use --seed to evaluate one explicitly)")
         if not entries:
-            raise SystemExit(f"{exp_dir.name}: no trained seeds found — train first")
+            raise SystemExit(f"{exp_dir.name}: no trained config seeds found — train first")
 
     for s, w, custom in entries:
         print(f"== eval {exp_dir.name} seed {s} ({w})")
@@ -222,13 +229,30 @@ def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) 
 
 def aggregate_exp(exp_dir: Path) -> None:
     """Merge per-seed metrics (same protocol hash) into experiment-level metrics.json."""
+    allowed = {f"s{s}" for s in load_config(exp_dir)["meta"]["seeds"]}
     per_seed, newest = {}, None
+    skipped_cfg, skipped_stale = [], []
     for mj in sorted(exp_dir.glob("seeds/s*/metrics.json")):
         m = json.loads(mj.read_text())
-        if m["protocol"]["hash"] == protocol_hash():
-            per_seed[f"s{m['seed']}"] = m
-            if newest is None or mj.stat().st_mtime > newest[0]:
-                newest = (mj.stat().st_mtime, m["protocol"].get("gt"))
+        sk = f"s{m['seed']}"
+        if m["protocol"]["hash"] != protocol_hash():
+            continue
+        if sk not in allowed:
+            skipped_cfg.append(sk)
+            continue
+        # metrics for a since-retrained checkpoint describe a dead model
+        recorded = m["model"].get("weights_sha256")
+        w = exp_dir / "seeds" / sk / "weights" / "best.pt"
+        if recorded and w.exists() and file_sha16(w) != recorded:
+            skipped_stale.append(sk)
+            continue
+        per_seed[sk] = m
+        if newest is None or mj.stat().st_mtime > newest[0]:
+            newest = (mj.stat().st_mtime, m["protocol"].get("gt"))
+    if skipped_cfg:
+        print(f"aggregation skipping seeds not in config: {skipped_cfg}")
+    if skipped_stale:
+        print(f"aggregation skipping retrained-since-eval seeds: {skipped_stale} — re-run eval")
     # never average seeds evaluated against different ground truth
     if newest and len({m["protocol"].get("gt") for m in per_seed.values()}) > 1:
         stale = [k for k, m in per_seed.items() if m["protocol"].get("gt") != newest[1]]

@@ -343,10 +343,10 @@
     }
   },
   "speed": {
-    "latency_ms_mean": 14.14,
-    "latency_ms_p50": 10.2,
-    "latency_ms_p95": 41.08,
-    "fps_batch1": 70.7,
+    "latency_ms_mean": 13.78,
+    "latency_ms_p50": 9.72,
+    "latency_ms_p95": 37.13,
+    "fps_batch1": 72.6,
     "device": "NVIDIA GeForce RTX 4060",
     "n_timed": 100
   },
@@ -360,6 +360,6 @@
     "python": "3.10.12",
     "torch": "2.9.1+cu128",
     "ultralytics": "8.4.65",
-    "git_sha": "9b3a02e"
+    "git_sha": "ee19924"
   }
 }

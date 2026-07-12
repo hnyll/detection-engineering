@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 
 from . import paths
-from .expmeta import file_sha16, protocol_hash
+from .expmeta import append_command_sh, protocol_hash, stale_seeds
 
 KEY = "map50_95"
 MIN_SEEDS = 3  # spec: variance measured with 3 seeds for important comparisons
@@ -24,14 +24,12 @@ def _load(exp_ref: str) -> tuple[str, dict]:
     m = json.loads(mj.read_text())
     # metrics must describe the checkpoints that exist NOW — a retrained seed
     # invalidates its old numbers
-    for sk, sv in (m.get("seeds") or {}).items():
-        recorded = sv.get("weights_sha256")
-        w = exp_dir / "seeds" / sk / "weights" / "best.pt"
-        if recorded and w.exists() and file_sha16(w) != recorded:
-            raise SystemExit(
-                f"REFUSED: {exp_dir.name} {sk} was retrained after its eval "
-                f"(checkpoint digest changed) — re-run eval first"
-            )
+    stale = stale_seeds(exp_dir, m)
+    if stale:
+        raise SystemExit(
+            f"REFUSED: {exp_dir.name} {stale} retrained after eval "
+            f"(checkpoint digest changed) — re-run eval first"
+        )
     return exp_dir.name, m
 
 
@@ -44,6 +42,11 @@ def compare(exp_refs: list[str]) -> None:
     exps = [_load(r) for r in exp_refs]
     if len(exps) < 2:
         raise SystemExit("need at least two experiments to compare")
+    if len({n for n, _ in exps}) != len(exps):
+        raise SystemExit("REFUSED: the same experiment appears more than once — "
+                         "a comparison needs distinct experiments")
+    for name, _ in exps:
+        append_command_sh(paths.resolve_exp(name), ["compare", *(n for n, _ in exps)])
 
     # comparability identity = protocol hash + dataset + split (+ GT fingerprint
     # when recorded) — a hash match alone would happily compare COCO128 vs VisDrone

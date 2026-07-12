@@ -4,6 +4,7 @@ meta:
   dataset: coco128
   seeds:
   - 17
+  - 42
   causal_variable: "none \u2014 plumbing smoke test"
   compensating_changes: []
 train:

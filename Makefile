@@ -32,8 +32,8 @@ compare:          ## make compare EXPS="exp_001_baseline exp_002_res1024"
 export:           ## make export EXP=... ARGS="--format onnx"
 	$(CLI) export $(EXP) $(ARGS)
 
-parity:           ## pt vs onnx numerical drift report
-	$(CLI) parity $(EXP)
+parity:           ## make parity EXP=... [ARGS="--seed 42"]
+	$(CLI) parity $(EXP) $(ARGS)
 
 bench:            ## make bench EXP=... ARGS="--backend trt-fp16"
 	$(CLI) bench $(EXP) $(ARGS)

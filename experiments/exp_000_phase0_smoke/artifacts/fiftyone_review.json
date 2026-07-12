@@ -1,7 +1,8 @@
 {
-  "dataset": "coco128-val",
-  "eval_key": "eval_exp_000_phase0_smoke_s17",
-  "pred_field": "pred_exp_000_phase0_smoke_s17",
+  "dataset": "coco128-val-14a2938d",
+  "eval_key": "eval_exp_000_phase0_smoke_s17_e0bcff35",
+  "pred_field": "pred_exp_000_phase0_smoke_s17_e0bcff35",
+  "predictions_sha256": "e0bcff354dc13f18",
   "seed": 17,
   "counts": {
     "tp": 787,

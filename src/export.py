@@ -49,7 +49,13 @@ def _resolve_seed(exp_dir: Path, seed: int | None) -> int:
         return seed
     if not trained:
         raise SystemExit(f"{exp_dir.name}: no trained weights — train first")
-    return trained[0]
+    # default to the config's declared seed order, never a lingering seed dir
+    for s in load_config(exp_dir)["meta"]["seeds"]:
+        if s in trained:
+            return s
+    raise SystemExit(f"{exp_dir.name}: no config-declared seed is trained "
+                     f"(config {load_config(exp_dir)['meta']['seeds']}, trained {trained}); "
+                     f"pass --seed explicitly")
 
 
 def _weights(exp_dir: Path, seed: int) -> Path:
@@ -95,6 +101,10 @@ def export_model(exp_ref: str, fmt: str = "onnx", half: bool = False,
     cfg = load_config(exp_dir)
     proto = load_protocol()
     seed = _resolve_seed(exp_dir, seed)
+    from .expmeta import append_command_sh
+    append_command_sh(exp_dir, ["export", exp_dir.name, "--format", fmt]
+                      + (["--half"] if half else []) + (["--int8"] if int8 else [])
+                      + ["--seed", str(seed)])
     w = _weights(exp_dir, seed)
     target = _exports_dir(exp_dir) / _target_name(seed, fmt, int8)
 
@@ -184,6 +194,8 @@ def parity(exp_ref: str, seed: int | None = None) -> None:
     proto = load_protocol()
     dataset, split = cfg["meta"]["dataset"], proto["split"]
     seed = _resolve_seed(exp_dir, seed)
+    from .expmeta import append_command_sh
+    append_command_sh(exp_dir, ["parity", exp_dir.name, "--seed", str(seed)])
     pt = _weights(exp_dir, seed)
     onnx_path = export_model(exp_ref, fmt="onnx", seed=seed)  # rebuilds if stale
 
@@ -267,6 +279,7 @@ def parity(exp_ref: str, seed: int | None = None) -> None:
           f"conf MAD {report['conf_mad']}")
     if not passed:
         print("   drift exceeds tolerance — document in decision.md before deploying")
+        raise SystemExit(1)  # callers (phase0, CI) must not treat this as success
 
 
 BACKEND_SPECS = {
@@ -289,6 +302,10 @@ def bench(exp_ref: str, backend: str, seed: int | None = None) -> None:
     proto = load_protocol()
     seed = _resolve_seed(exp_dir, seed)
 
+    from .expmeta import append_command_sh
+    append_command_sh(exp_dir, ["bench", exp_dir.name, "--backend", backend,
+                                "--seed", str(seed)])
+
     if backend == "pt":
         target = _weights(exp_dir, seed)
     else:
@@ -304,7 +321,9 @@ def bench(exp_ref: str, backend: str, seed: int | None = None) -> None:
 
     out = _exports_dir(exp_dir) / "bench.json"
     results = json.loads(out.read_text()) if out.exists() else {}
-    results[backend] = {**speed, "file": target.name, "seed": seed, "imgsz": proto["imgsz"]}
+    results[backend] = {**speed, "file": target.name, "seed": seed,
+                        "source_sha256": _sha16(_weights(exp_dir, seed)),
+                        "imgsz": proto["imgsz"]}
     out.write_text(json.dumps(results, indent=2) + "\n")
     print(f"   {speed['latency_ms_mean']}ms/img ({speed['fps_batch1']} FPS) "
           f"-> {out.relative_to(paths.ROOT)}")

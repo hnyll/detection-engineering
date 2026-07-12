@@ -58,17 +58,36 @@ def _names(items, n=3) -> str:
 
 
 def _checks() -> dict[str, list[tuple[str, bool, str]]]:
+    from .expmeta import file_sha16, load_protocol, stale_seeds
+
+    split = load_protocol()["split"]
     exps = list_experiments()
     runs = [(e, r) for e in exps for r in _state(e)["runs"]]
     completed = [(e, r) for e, r in runs if r.get("status") == "completed"]
 
-    has_metrics = [e for e in exps if (e / "metrics.json").exists()]
+    def _preds_current(e: Path, fname: str, recorded: str | None) -> bool:
+        """Evidence only counts if it describes the predictions that exist NOW."""
+        p = e / "artifacts" / (fname or "")
+        return bool(recorded) and p.is_file() and file_sha16(p) == recorded
+
+    # metrics count only when no seed was retrained since its eval
+    has_metrics = [e for e in exps if (e / "metrics.json").exists()
+                   and not stale_seeds(e, _json(e / "metrics.json"))]
     resumed = [(e, r) for e, r in completed if r.get("resumed_from")]
     with_wandb = [(e, r) for e, r in runs if r.get("wandb_id") or r.get("wandb_runs")]
 
-    tide_done = [e for e in exps if (e / "tide_report.json").exists()]
+    tide_done = []
+    for e in exps:
+        t = _json(e / "tide_report.json")
+        if t and _preds_current(e, t.get("predictions"), t.get("predictions_sha256")):
+            tide_done.append(e)
     reviews = {e: _json(e / "artifacts" / "fiftyone_review.json") for e in exps}
-    reviewed_100 = [e for e, r in reviews.items() if r.get("reviewed_failures", 0) >= 100]
+    reviewed_100 = [
+        e for e, r in reviews.items()
+        if r.get("reviewed_failures", 0) >= 100
+        and _preds_current(e, f"predictions_{split}_s{r.get('seed')}.json",
+                           r.get("predictions_sha256"))
+    ]
     fr_filled = [e for e in exps if _differs_from_template(e, "failure_report.md")]
     top3 = [e for e in fr_filled
             if all(re.search(rf"^{i}\.\s*\S+", (e / "failure_report.md").read_text(), re.M)
@@ -93,11 +112,25 @@ def _checks() -> dict[str, list[tuple[str, bool, str]]]:
     cmp_3seed = [c for c in cmps
                  if all(row.get("n_seeds", 0) >= 3 for row in c["experiments"])]
 
-    # parity must actually PASS its recorded tolerances, not merely exist
-    parities = [e for e in exps
-                if _json(e / "exports" / "parity_report.json").get("passed") is True]
+    # parity must PASS its tolerances AND describe the current checkpoint
+    parities = []
+    for e in exps:
+        pr = _json(e / "exports" / "parity_report.json")
+        if pr.get("passed") is not True:
+            continue
+        w = e / "seeds" / f"s{pr.get('seed')}" / "weights" / "best.pt"
+        if w.exists() and pr.get("weights_sha256") == file_sha16(w):
+            parities.append(e)
     benches = {e: _json(e / "exports" / "bench.json") for e in exps}
-    trt = [e for e, b in benches.items() if any(k.startswith("trt") for k in b)]
+    trt = []
+    for e, b in benches.items():
+        for k, entry in b.items():
+            if not k.startswith("trt"):
+                continue
+            w = e / "seeds" / f"s{entry.get('seed')}" / "weights" / "best.pt"
+            if w.exists() and entry.get("source_sha256") == file_sha16(w):
+                trt.append(e)
+                break
     coreml_exports = [e for e in exps if list((e / "exports").glob("*.mlpackage"))]
     coreml_manual = bool(re.search(r"\| Date / device \|\s*[^|\s]",
                                    (ROOT / "docs" / "deploy_coreml.md").read_text()))
