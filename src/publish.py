@@ -30,41 +30,73 @@ def _git(*args: str, check: bool = True) -> subprocess.CompletedProcess:
     return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=check)
 
 
-def _scan_files(files: list[str], action: str) -> None:
-    bad_paths = [p for p in files if FORBIDDEN_STAGED.search(p)]
+def _scan_staged() -> None:
+    """Scan what is actually staged (index blobs, not the worktree — they can differ)."""
+    staged = [l for l in _git("diff", "--cached", "--name-only", "--diff-filter=d")
+              .stdout.splitlines() if l]
+    bad_paths = [p for p in staged if FORBIDDEN_STAGED.search(p)]
     if bad_paths:
-        raise SystemExit(f"REFUSING to {action} forbidden paths (weights/data/env): {bad_paths}")
+        raise SystemExit(f"REFUSING to commit forbidden paths (weights/data/env): {bad_paths}")
     hits = []
-    for p in files:
-        f = ROOT / p
-        if not f.is_file() or f.stat().st_size > 1_000_000:
+    for p in staged:
+        raw = subprocess.run(["git", "show", f":{p}"], cwd=ROOT, capture_output=True).stdout
+        if len(raw) > 1_000_000:
             continue
-        try:
-            text = f.read_text(errors="ignore")
-        except Exception:
-            continue
+        text = raw.decode("utf-8", errors="ignore")
         for pat in SECRET_PATTERNS:
             m = pat.search(text)
             if m:
                 hits.append(f"{p}: {m.group(0)[:24]}…")
     if hits:
-        raise SystemExit(f"REFUSING to {action} possible secrets:\n  " + "\n  ".join(hits))
-    print(f"secret scan clean ({len(files)} files, {action})")
+        raise SystemExit("REFUSING to commit possible secrets:\n  " + "\n  ".join(hits))
+    print(f"secret scan clean ({len(staged)} staged files)")
 
 
-def _scan_staged() -> None:
-    staged = [l for l in _git("diff", "--cached", "--name-only").stdout.splitlines() if l]
-    _scan_files(staged, "commit")
+def _outgoing_blobs() -> list[tuple[str, str]]:
+    """Every (blob_sha, path) that pushing main would publish — ALL history in
+    origin/main..main, not the endpoint diff. A secret committed and later
+    deleted is still in the pushed pack; a clean working copy can hide a dirty
+    committed blob, so scanning must read blob contents, never the worktree."""
+    rng = "origin/main..main" \
+        if _git("rev-parse", "--verify", "origin/main", check=False).returncode == 0 else "main"
+    objs = _git("rev-list", "--objects", rng).stdout.splitlines()
+    sha_path = [l.split(" ", 1) for l in objs if l.strip()]
+    sha_path = [(sp[0], sp[1] if len(sp) > 1 else "") for sp in sha_path]
+
+    batch = subprocess.run(
+        ["git", "cat-file", "--batch-check"],
+        input="\n".join(sha for sha, _ in sha_path),
+        cwd=ROOT, capture_output=True, text=True, check=True,
+    ).stdout.splitlines()
+    types = {l.split()[0]: (l.split()[1], int(l.split()[2]))
+             for l in batch if len(l.split()) == 3}
+    return [(sha, path) for sha, path in sha_path
+            if path and types.get(sha, ("", 0))[0] == "blob"
+            and types[sha][1] <= 1_000_000]
 
 
-def _outgoing_files() -> list[str]:
-    """Files touched by commits that a push would publish."""
-    upstream = _git("rev-parse", "--verify", "origin/main", check=False)
-    if upstream.returncode == 0:
-        out = _git("diff", "--name-only", "origin/main..HEAD").stdout
-    else:  # first push publishes the whole tree
-        out = _git("ls-files").stdout
-    return [l for l in out.splitlines() if l]
+def _blob_text(sha: str) -> str:
+    raw = subprocess.run(["git", "cat-file", "blob", sha],
+                         cwd=ROOT, capture_output=True, check=True).stdout
+    return raw.decode("utf-8", errors="ignore")
+
+
+def _scan_outgoing_history() -> None:
+    blobs = _outgoing_blobs()
+    bad_paths = sorted({p for _, p in blobs if FORBIDDEN_STAGED.search(p)})
+    if bad_paths:
+        raise SystemExit(f"REFUSING to push history containing forbidden paths: {bad_paths}")
+    hits = []
+    for sha, path in blobs:
+        text = _blob_text(sha)
+        for pat in SECRET_PATTERNS:
+            m = pat.search(text)
+            if m:
+                hits.append(f"{path}@{sha[:8]}: {m.group(0)[:24]}…")
+    if hits:
+        raise SystemExit("REFUSING to push history with possible secrets "
+                         "(rewrite history to remove them):\n  " + "\n  ".join(sorted(set(hits))))
+    print(f"secret scan clean ({len(blobs)} blobs across outgoing history)")
 
 
 def _commit(message: str) -> None:
@@ -111,7 +143,7 @@ def _create_remote() -> None:
 
 def _push() -> None:
     _git("fetch", "origin", check=False)  # so the outgoing range is accurate
-    _scan_files(_outgoing_files(), "push")
+    _scan_outgoing_history()
     r = _git("push", "-u", "origin", "main", check=False)
     if r.returncode != 0:
         raise SystemExit(f"push failed: {r.stderr.strip()}")

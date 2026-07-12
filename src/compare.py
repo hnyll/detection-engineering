@@ -10,9 +10,10 @@ from __future__ import annotations
 import json
 
 from . import paths
-from .expmeta import protocol_hash
+from .expmeta import file_sha16, protocol_hash
 
 KEY = "map50_95"
+MIN_SEEDS = 3  # spec: variance measured with 3 seeds for important comparisons
 
 
 def _load(exp_ref: str) -> tuple[str, dict]:
@@ -20,7 +21,18 @@ def _load(exp_ref: str) -> tuple[str, dict]:
     mj = exp_dir / "metrics.json"
     if not mj.exists():
         raise SystemExit(f"{exp_dir.name}: no metrics.json — run eval first")
-    return exp_dir.name, json.loads(mj.read_text())
+    m = json.loads(mj.read_text())
+    # metrics must describe the checkpoints that exist NOW — a retrained seed
+    # invalidates its old numbers
+    for sk, sv in (m.get("seeds") or {}).items():
+        recorded = sv.get("weights_sha256")
+        w = exp_dir / "seeds" / sk / "weights" / "best.pt"
+        if recorded and w.exists() and file_sha16(w) != recorded:
+            raise SystemExit(
+                f"REFUSED: {exp_dir.name} {sk} was retrained after its eval "
+                f"(checkpoint digest changed) — re-run eval first"
+            )
+    return exp_dir.name, m
 
 
 def _mean_std(m: dict, key: str) -> tuple[float | None, float | None]:
@@ -69,14 +81,18 @@ def compare(exp_refs: list[str]) -> None:
         })
 
     b_mean, b_std = _mean_std(base, KEY)
+    n_base = base.get("n_seeds", 1)
     for name, m in exps[1:]:
         mean, std = _mean_std(m, KEY)
+        n_cand = m.get("n_seeds", 1)
         delta = round(mean - b_mean, 5)
-        if b_std is None or std is None:
-            # significance requires a variance estimate on BOTH sides
-            verdict = "VARIANCE-UNKNOWN (need ≥2 seeds on both experiments; spec says 3)"
-        elif abs(delta) < max(b_std, std):
-            verdict = f"INCONCLUSIVE (|Δ|={abs(delta):.5f} < max std {max(b_std, std):.5f})"
+        if b_std is None or std is None or n_base < MIN_SEEDS or n_cand < MIN_SEEDS:
+            verdict = (f"INSUFFICIENT-SEEDS (significance needs ≥{MIN_SEEDS} seeds per "
+                       f"side; have {n_base} vs {n_cand})")
+        elif delta == 0:
+            verdict = "NO DIFFERENCE"
+        elif abs(delta) <= max(b_std, std):
+            verdict = f"INCONCLUSIVE (|Δ|={abs(delta):.5f} ≤ max std {max(b_std, std):.5f})"
         else:
             verdict = "significant " + ("improvement" if delta > 0 else "regression")
         verdicts.append({"baseline": base_name, "candidate": name,

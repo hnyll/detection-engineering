@@ -3,7 +3,7 @@
     "hash": "a9b8207b3cc7a070",
     "dataset": "coco128",
     "split": "val",
-    "gt": "9f566d740eb5e01d",
+    "gt": "14a2938d8e5f6e8e",
     "imgsz": 640,
     "conf": 0.001,
     "iou": 0.7,
@@ -23,10 +23,10 @@
     "ap_medium_std": 6e-05,
     "ap_large_mean": 0.72738,
     "ap_large_std": 0.00576,
-    "latency_ms_mean_mean": 23.735,
-    "latency_ms_mean_std": 6.38517,
-    "fps_batch1_mean": 43.7,
-    "fps_batch1_std": 11.73797
+    "latency_ms_mean_mean": 11.81,
+    "latency_ms_mean_std": 3.29512,
+    "fps_batch1_mean": 88.1,
+    "fps_batch1_std": 24.60732
   },
   "overall": null,
   "per_class": {
@@ -432,34 +432,37 @@
     }
   },
   "speed": {
-    "latency_ms_mean": 28.25,
-    "latency_ms_p50": 19.02,
-    "latency_ms_p95": 67.17,
-    "fps_batch1": 35.4,
+    "latency_ms_mean": 14.14,
+    "latency_ms_p50": 10.2,
+    "latency_ms_p95": 41.08,
+    "fps_batch1": 70.7,
     "device": "NVIDIA GeForce RTX 4060",
     "n_timed": 100
   },
   "model": {
-    "params_m": 0.0,
-    "gflops": 0.0,
-    "weights": "/home/hnyll/detection-engineering/experiments/exp_000_phase0_smoke/seeds/s17/weights/best.pt"
+    "params_m": 2.616,
+    "gflops": 6.48,
+    "weights": "/home/hnyll/detection-engineering/experiments/exp_000_phase0_smoke/seeds/s17/weights/best.pt",
+    "weights_sha256": "dd06e45e10027815"
   },
   "seeds": {
     "s17": {
       "map50_95": 0.52254,
       "map50": 0.68566,
-      "ap_small": 0.19962
+      "ap_small": 0.19962,
+      "weights_sha256": "dd06e45e10027815"
     },
     "s42": {
       "map50_95": 0.52865,
       "map50": 0.69738,
-      "ap_small": 0.19944
+      "ap_small": 0.19944,
+      "weights_sha256": "60198aa735484508"
     }
   },
   "env": {
     "python": "3.10.12",
     "torch": "2.9.1+cu128",
     "ultralytics": "8.4.65",
-    "git_sha": "fde1cd2"
+    "git_sha": "9b3a02e"
   }
 }

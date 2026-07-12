@@ -52,16 +52,19 @@ def class_names(dataset: str) -> dict[int, str]:
 
 
 def gt_fingerprint(dataset: str, split: str) -> str:
-    """Cheap dataset identity: dataset yaml + every image name + label file size.
-    Catches config edits, added/removed images, and label rewrites; a same-size
-    in-place label edit would slip through (acceptable for a cache key)."""
+    """Dataset identity: dataset yaml + per-image (name, dimensions, file size)
+    + full label file CONTENTS. Catches config edits, label value changes, and
+    same-name image replacement/resizing. Costs one PIL header read per image
+    (~1s for the 548-image val split)."""
     h = hashlib.sha256(dataset_yaml(dataset).read_bytes())
     imgs = list_images(dataset, split)
     h.update(str(len(imgs)).encode())
     for p in imgs:
+        with Image.open(p) as im:  # header only
+            w, hh = im.size
+        h.update(f"{p.name}:{w}x{hh}:{p.stat().st_size}".encode())
         lbl = _label_path(p)
-        size = lbl.stat().st_size if lbl.exists() else -1
-        h.update(f"{p.name}:{size}".encode())
+        h.update(lbl.read_bytes() if lbl.exists() else b"-")
     return h.hexdigest()[:16]
 
 

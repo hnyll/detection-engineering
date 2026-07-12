@@ -13,8 +13,8 @@ from pathlib import Path
 
 from . import paths
 from .data_coco import build_gt, class_names, image_dir, list_images
-from .expmeta import (append_command_sh, env_versions, load_config, load_protocol,
-                      protocol_hash)
+from .expmeta import (append_command_sh, env_versions, file_sha16, load_config,
+                      load_protocol, protocol_hash)
 
 AGG_KEYS = ("map50_95", "map50", "map75", "ap_small", "ap_medium", "ap_large",
             "latency_ms_mean", "fps_batch1")
@@ -59,7 +59,8 @@ def predict_to_coco(model, dataset: str, split: str, proto: dict, out_json: Path
     return dets
 
 
-def coco_metrics(gt_json: Path, dets: list[dict], max_det: int, names: dict[int, str]) -> dict:
+def coco_metrics(gt_json: Path, dets: list[dict], max_det: int, names: dict[int, str],
+                 img_ids: list[int] | None = None) -> dict:
     import contextlib
     import io
 
@@ -77,6 +78,8 @@ def coco_metrics(gt_json: Path, dets: list[dict], max_det: int, names: dict[int,
         coco_dt = coco_gt.loadRes(dets)
         e = COCOeval(coco_gt, coco_dt, "bbox")
         e.params.maxDets = [1, 10, max_det]
+        if img_ids is not None:  # subset evaluation (e.g. parity's image sample)
+            e.params.imgIds = img_ids
         e.evaluate()
         e.accumulate()
         e.summarize()
@@ -177,10 +180,14 @@ def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) 
         dets = predict_to_coco(model, dataset, split, proto, dets_json)
         acc = coco_metrics(gt_json, dets, proto["max_det"], names)
         speed = measure_speed(model, dataset, split, proto)
+        # model.info(verbose=False) returns None in this ultralytics version —
+        # compute directly; None (not 0) on failure so gates flag it as missing
         try:
-            n_l, n_p, n_g, flops = model.info(verbose=False)
+            from ultralytics.utils.torch_utils import get_flops, get_num_params
+            n_p = get_num_params(model.model)
+            flops = get_flops(model.model, proto["imgsz"])
         except Exception:
-            n_p, flops = 0, 0.0
+            n_p, flops = None, None
         seed_metrics = {
             "protocol": {"hash": protocol_hash(), "dataset": dataset, "split": split,
                          "gt": gt_fp, "imgsz": proto["imgsz"], "conf": proto["conf"],
@@ -190,8 +197,10 @@ def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) 
             "overall": acc["overall"],
             "per_class": acc["per_class"],
             "speed": speed,
-            "model": {"params_m": round(n_p / 1e6, 3), "gflops": round(float(flops), 2),
-                      "weights": str(w)},
+            "model": {"params_m": round(n_p / 1e6, 3) if n_p else None,
+                      "gflops": round(float(flops), 2) if flops else None,
+                      "weights": str(w),
+                      "weights_sha256": file_sha16(w)},
             "env": env_versions(),
         }
         if custom:
@@ -270,7 +279,9 @@ def aggregate_exp(exp_dir: Path) -> None:
         "model": first["model"],
         "seeds": {k: {"map50_95": v["overall"]["map50_95"],
                       "map50": v["overall"]["map50"],
-                      "ap_small": v["overall"]["ap_small"]} for k, v in per_seed.items()},
+                      "ap_small": v["overall"]["ap_small"],
+                      "weights_sha256": v["model"].get("weights_sha256")}
+                  for k, v in per_seed.items()},
         "env": first["env"],
     }
     (exp_dir / "metrics.json").write_text(json.dumps(exp_metrics, indent=2) + "\n")

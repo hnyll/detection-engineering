@@ -99,6 +99,10 @@ def export_model(exp_ref: str, fmt: str = "onnx", half: bool = False,
     target = _exports_dir(exp_dir) / _target_name(seed, fmt, int8)
 
     kwargs: dict = {"format": fmt, "imgsz": proto["imgsz"], "device": proto["device"]}
+    if fmt == "onnx":
+        # dynamic shapes so ONNX inference letterboxes exactly like the pt model
+        # (a static 640x640 graph forces square padding -> systematic box drift)
+        kwargs["dynamic"] = True
     if fmt == "engine":
         kwargs["half"] = not int8
         if int8:
@@ -158,37 +162,59 @@ def _iou_xyxy(a: list[float], b: list[float]) -> float:
     return inter / ua if ua > 0 else 0.0
 
 
+# parity tolerances (deliberately NOT in protocol.yaml — parity is a deployment
+# check, not part of the eval comparability identity)
+PARITY_MAX_MAP_DELTA = 0.005   # |mAP50-95(pt) - mAP50-95(onnx)| on the image sample
+PARITY_MIN_MATCH_RATE = 0.90   # matched / max(boxes) among conf>=DRIFT_CONF boxes
+DRIFT_CONF = 0.25              # box-level drift stats floor (near-zero boxes are noise)
+
+
 def parity(exp_ref: str, seed: int | None = None) -> None:
-    """Numerical drift between the .pt model and its ONNX export, both run through
-    the identical Ultralytics pre/post-processing at protocol settings."""
+    """Drift between the .pt model and its ONNX export at the PROTOCOL settings
+    (the range that evaluation actually uses), with recorded pass/fail:
+    mAP delta on the image sample + box-level drift among confident boxes."""
     import torch  # noqa: F401
     from ultralytics import YOLO
+
+    from .data_coco import build_gt, class_names
 
     _preload_cudnn()
     exp_dir = paths.resolve_exp(exp_ref)
     cfg = load_config(exp_dir)
     proto = load_protocol()
+    dataset, split = cfg["meta"]["dataset"], proto["split"]
     seed = _resolve_seed(exp_dir, seed)
     pt = _weights(exp_dir, seed)
     onnx_path = export_model(exp_ref, fmt="onnx", seed=seed)  # rebuilds if stale
 
-    imgs = [str(p) for p in
-            list_images(cfg["meta"]["dataset"], proto["split"])[:PARITY_IMAGES]]
-    pargs = dict(imgsz=proto["imgsz"], conf=0.25, iou=proto["iou"],
+    # first N sorted images == GT image ids 0..N-1 (data_coco id assignment)
+    imgs = [str(p) for p in list_images(dataset, split)[:PARITY_IMAGES]]
+    img_ids = list(range(len(imgs)))
+    gt_json = build_gt(dataset, split)
+    names = class_names(dataset)
+    pargs = dict(imgsz=proto["imgsz"], conf=proto["conf"], iou=proto["iou"],
                  max_det=proto["max_det"], device=proto["device"], verbose=False)
 
     m_pt, m_ox = YOLO(str(pt)), YOLO(str(onnx_path))
+    dets = {"pt": [], "onnx": []}
     n_pt = n_ox = matched = 0
     conf_ad, coord_ad = [], []
-    for img in imgs:
+    for i, img in enumerate(imgs):
         b_pt = _boxes(m_pt.predict(img, **pargs)[0])
         b_ox = _boxes(m_ox.predict(img, **pargs)[0])
-        n_pt += len(b_pt)
-        n_ox += len(b_ox)
+        for tag, blist in (("pt", b_pt), ("onnx", b_ox)):
+            for (x1, y1, x2, y2), conf, cls in blist:
+                dets[tag].append({"image_id": i, "category_id": cls + 1,
+                                  "bbox": [x1, y1, x2 - x1, y2 - y1], "score": conf})
+        # box-level drift among confident boxes only
+        f_pt = [b for b in b_pt if b[1] >= DRIFT_CONF]
+        f_ox = [b for b in b_ox if b[1] >= DRIFT_CONF]
+        n_pt += len(f_pt)
+        n_ox += len(f_ox)
         used = set()
-        for box, conf, cls in b_pt:
+        for box, conf, cls in f_pt:
             best_j, best_iou = -1, IOU_MATCH
-            for j, (obox, oconf, ocls) in enumerate(b_ox):
+            for j, (obox, oconf, ocls) in enumerate(f_ox):
                 if j in used or ocls != cls:
                     continue
                 iou = _iou_xyxy(box, obox)
@@ -197,21 +223,36 @@ def parity(exp_ref: str, seed: int | None = None) -> None:
             if best_j >= 0:
                 used.add(best_j)
                 matched += 1
-                obox, oconf, _ = b_ox[best_j]
+                obox, oconf, _ = f_ox[best_j]
                 conf_ad.append(abs(conf - oconf))
                 coord_ad.extend(abs(a - b) for a, b in zip(box, obox))
 
+    from .evaluate import coco_metrics
+    map_pt = coco_metrics(gt_json, dets["pt"], proto["max_det"], names,
+                          img_ids=img_ids)["overall"]["map50_95"]
+    map_ox = coco_metrics(gt_json, dets["onnx"], proto["max_det"], names,
+                          img_ids=img_ids)["overall"]["map50_95"]
+    map_delta = round(abs(map_pt - map_ox), 5)
+    match_rate = round(matched / max(n_pt, n_ox), 4) if max(n_pt, n_ox) else 1.0
+    passed = map_delta <= PARITY_MAX_MAP_DELTA and match_rate >= PARITY_MIN_MATCH_RATE
+
     report = {
+        "passed": passed,
         "seed": seed,
         "weights": str(pt), "weights_sha256": _sha16(pt),
         "onnx": str(onnx_path.relative_to(paths.ROOT)),
-        "n_images": len(imgs), "boxes_pt": n_pt, "boxes_onnx": n_ox,
-        "matched": matched,
-        "unmatched_pt": n_pt - matched, "unmatched_onnx": n_ox - matched,
+        "n_images": len(imgs),
+        "map50_95_pt": map_pt, "map50_95_onnx": map_ox, "map50_95_delta": map_delta,
+        "boxes_pt": n_pt, "boxes_onnx": n_ox, "matched": matched,
+        "match_rate": match_rate,
         "conf_mad": round(sum(conf_ad) / len(conf_ad), 6) if conf_ad else None,
         "conf_max_ad": round(max(conf_ad), 6) if conf_ad else None,
         "coord_mad_px": round(sum(coord_ad) / len(coord_ad), 4) if coord_ad else None,
-        "match_iou": IOU_MATCH, "conf_floor": 0.25,
+        "tolerances": {"max_map_delta": PARITY_MAX_MAP_DELTA,
+                       "min_match_rate": PARITY_MIN_MATCH_RATE,
+                       "drift_conf_floor": DRIFT_CONF,
+                       "match_iou": IOU_MATCH,
+                       "eval_conf": proto["conf"]},
     }
     del m_pt, m_ox
     from .train import _free_gpu
@@ -219,9 +260,13 @@ def parity(exp_ref: str, seed: int | None = None) -> None:
 
     out = _exports_dir(exp_dir) / "parity_report.json"
     out.write_text(json.dumps(report, indent=2) + "\n")
-    print(f"wrote {out.relative_to(paths.ROOT)} (seed {seed})")
-    print(f"   boxes pt/onnx {n_pt}/{n_ox}, matched {matched}, "
-          f"conf MAD {report['conf_mad']}, coord MAD {report['coord_mad_px']}px")
+    print(f"wrote {out.relative_to(paths.ROOT)} (seed {seed}) — "
+          f"{'PASS' if passed else 'FAIL'}")
+    print(f"   mAP pt/onnx {map_pt:.4f}/{map_ox:.4f} (Δ{map_delta}), "
+          f"match rate {match_rate} ({matched}/{max(n_pt, n_ox)}), "
+          f"conf MAD {report['conf_mad']}")
+    if not passed:
+        print("   drift exceeds tolerance — document in decision.md before deploying")
 
 
 BACKEND_SPECS = {

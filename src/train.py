@@ -147,7 +147,10 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
                 )
         except KeyboardInterrupt:
             interrupted = True
-            print(f"== interrupted (checkpoint at {rdir / 'weights' / 'last.pt'})")
+            if interrupt_after is not None:
+                print(f"== planned interrupt (checkpoint at {rdir / 'weights' / 'last.pt'})")
+            else:
+                print(f"== cancelled by user (checkpoint at {rdir / 'weights' / 'last.pt'})")
         finally:
             if wandb.run is not None:  # normal completion is finished by the callback
                 wandb.run.finish()
@@ -166,6 +169,11 @@ def train(exp_ref: str, seeds: list[int] | None = None, resume: bool = False,
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         })
         save_state(exp_dir, state)
+
+        if interrupted and interrupt_after is None:
+            # genuine Ctrl-C: state is recorded, now propagate the cancellation
+            # instead of silently moving on to the next seed
+            raise KeyboardInterrupt
 
         if not interrupted:
             sdir = paths.seed_dir(exp_dir, seed) / "weights"

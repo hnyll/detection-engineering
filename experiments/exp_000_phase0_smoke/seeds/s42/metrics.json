@@ -3,7 +3,7 @@
     "hash": "a9b8207b3cc7a070",
     "dataset": "coco128",
     "split": "val",
-    "gt": "9f566d740eb5e01d",
+    "gt": "14a2938d8e5f6e8e",
     "imgsz": 640,
     "conf": 0.001,
     "iou": 0.7,
@@ -343,22 +343,23 @@
     }
   },
   "speed": {
-    "latency_ms_mean": 19.22,
-    "latency_ms_p50": 18.42,
-    "latency_ms_p95": 31.57,
-    "fps_batch1": 52.0,
+    "latency_ms_mean": 9.48,
+    "latency_ms_p50": 9.35,
+    "latency_ms_p95": 10.86,
+    "fps_batch1": 105.5,
     "device": "NVIDIA GeForce RTX 4060",
     "n_timed": 100
   },
   "model": {
-    "params_m": 0.0,
-    "gflops": 0.0,
-    "weights": "/home/hnyll/detection-engineering/experiments/exp_000_phase0_smoke/seeds/s42/weights/best.pt"
+    "params_m": 2.616,
+    "gflops": 6.48,
+    "weights": "/home/hnyll/detection-engineering/experiments/exp_000_phase0_smoke/seeds/s42/weights/best.pt",
+    "weights_sha256": "60198aa735484508"
   },
   "env": {
     "python": "3.10.12",
     "torch": "2.9.1+cu128",
     "ultralytics": "8.4.65",
-    "git_sha": "fde1cd2"
+    "git_sha": "9b3a02e"
   }
 }

@@ -37,6 +37,11 @@ def protocol_hash() -> str:
     return hashlib.sha256(PROTOCOL_YAML.read_bytes()).hexdigest()[:16]
 
 
+def file_sha16(p: Path | str) -> str:
+    """Content digest for artifact provenance (checkpoints, prediction files)."""
+    return hashlib.sha256(Path(p).resolve().read_bytes()).hexdigest()[:16]
+
+
 # -- decision.md frontmatter ---------------------------------------------------
 
 def read_frontmatter(md_path: Path) -> dict:

@@ -97,13 +97,31 @@ def review(exp_ref: str, seed: int | None = None, launch: bool = False,
             raise SystemExit(f"{exp_dir.name}: no predictions — run eval first")
         seed = int(preds[0].stem.rsplit("_s", 1)[1])
 
+    from .expmeta import file_sha16
+
     ds = ensure_fo_dataset(dataset, split)
     # seed-scoped identity: without it, `review --seed 42` after reviewing seed 17
     # would silently show and count seed 17's boxes
     field = f"pred_{exp_dir.name}_s{seed}"
     eval_key = f"eval_{exp_dir.name}_s{seed}"
+
+    dets_json = exp_dir / "artifacts" / f"predictions_{split}_s{seed}.json"
+    if not dets_json.exists():
+        raise SystemExit(f"no {dets_json.name} — run eval first")
+    dets_sha = file_sha16(dets_json)
+    info = dict(ds.info or {})
+    if field in ds.get_field_schema() and info.get(f"prov_{field}") != dets_sha:
+        # the seed was re-evaluated (e.g. after retraining) — stale boxes must go
+        print(f"predictions changed since last review — refreshing '{field}'")
+        if eval_key in ds.list_evaluations():
+            ds.delete_evaluation(eval_key)
+        ds.delete_sample_field(field)
+
     if field not in ds.get_field_schema():
         attach_predictions(ds, exp_dir, dataset, split, seed)
+        info[f"prov_{field}"] = dets_sha
+        ds.info = info
+        ds.save()
     if eval_key not in ds.list_evaluations():
         print(f"evaluating '{field}' vs ground_truth (eval_key={eval_key})")
         ds.evaluate_detections(field, gt_field="ground_truth", eval_key=eval_key,
@@ -127,11 +145,13 @@ def review(exp_ref: str, seed: int | None = None, launch: bool = False,
             "fp": ds.count_values(f"{field}.detections.{eval_key}").get("fp", 0),
             "fn": ds.count_values(f"ground_truth.detections.{eval_key}").get("fn", 0),
         }
+        # only the explicit 'reviewed' tag counts — a condition tag alone (e.g.
+        # 'tiny') can be applied in bulk without actually inspecting the box
         fp_reviewed = ds.filter_labels(
-            field, (F(eval_key) == "fp") & (F("tags").length() > 0)
+            field, (F(eval_key) == "fp") & F("tags").contains("reviewed")
         ).count(f"{field}.detections")
         fn_reviewed = ds.filter_labels(
-            "ground_truth", (F(eval_key) == "fn") & (F("tags").length() > 0)
+            "ground_truth", (F(eval_key) == "fn") & F("tags").contains("reviewed")
         ).count("ground_truth.detections")
         stats = {
             "dataset": ds.name,
@@ -153,6 +173,8 @@ def review(exp_ref: str, seed: int | None = None, launch: bool = False,
 
     if launch:
         print("launching FiftyOne app — open http://localhost:5151 in the Windows browser")
-        print(f"tag failure boxes with: {', '.join(CONDITION_TAGS)}")
+        print("tag every inspected failure box with 'reviewed' (that's what the gate "
+              "counts) plus condition tags: "
+              + ", ".join(t for t in CONDITION_TAGS if t != "reviewed"))
         session = fo.launch_app(ds, port=5151)
         session.wait()

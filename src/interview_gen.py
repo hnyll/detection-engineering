@@ -8,15 +8,24 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .expmeta import load_config, load_protocol
+from .expmeta import load_config
 from .paths import COCO_GT_DIR, INTERVIEW, list_experiments, resolve_exp
 
 SMOKE_MARKERS = ("phase0", "smoke")
 
 
-def _is_smoke(exp: Path) -> bool:
+def _metrics(exp: Path) -> dict | None:
+    mj = exp / "metrics.json"
+    return json.loads(mj.read_text()) if mj.exists() else None
+
+
+def _is_smoke(exp: Path, metrics: dict | None) -> bool:
     if any(m in exp.name for m in SMOKE_MARKERS):
         return True
+    # judge by what was actually EVALUATED (metrics.protocol), not the current
+    # config — the config can be edited after the fact
+    if metrics:
+        return metrics["protocol"]["dataset"] == "coco128"
     try:
         return load_config(exp)["meta"]["dataset"] == "coco128"
     except SystemExit:
@@ -26,19 +35,19 @@ def _is_smoke(exp: Path) -> bool:
 def _best_exp() -> tuple[Path | None, dict | None]:
     best, best_score, best_m = None, -1.0, None
     for e in list_experiments():
-        if _is_smoke(e) or not (e / "metrics.json").exists():
+        m = _metrics(e)
+        if m is None or _is_smoke(e, m):
             continue
-        m = json.loads((e / "metrics.json").read_text())
         score = (m.get("aggregate") or {}).get("map50_95_mean") or 0
         if score > best_score:
             best, best_score, best_m = e, score, m
     return best, best_m
 
 
-def _dataset_facts(exp: Path) -> dict:
-    """Image/class counts from the experiment's own dataset GT, not assumptions."""
-    dataset = load_config(exp)["meta"]["dataset"]
-    split = load_protocol()["split"]
+def _dataset_facts(metrics: dict) -> dict:
+    """Facts from the dataset the metrics were actually produced on."""
+    dataset = metrics["protocol"]["dataset"]
+    split = metrics["protocol"]["split"]
     facts = {"dataset": dataset, "split": split, "n_images": "TODO", "n_classes": "TODO"}
     gt = COCO_GT_DIR / f"{dataset}_{split}.json"
     if gt.exists():
@@ -49,20 +58,26 @@ def _dataset_facts(exp: Path) -> dict:
 
 
 def generate(exp_ref: str | None = None, force: bool = False) -> None:
+    from .expmeta import protocol_hash
+
     if exp_ref:
         exp = resolve_exp(exp_ref)
-        if _is_smoke(exp):
+        metrics = _metrics(exp)
+        if metrics is None:
+            raise SystemExit(f"{exp.name} has no metrics.json — eval first")
+        if _is_smoke(exp, metrics):
             raise SystemExit(f"{exp.name} is a smoke test — interview claims must "
                              "come from a real experiment")
-        mj = exp / "metrics.json"
-        metrics = json.loads(mj.read_text()) if mj.exists() else {}
     else:
         exp, metrics = _best_exp()
     if exp is None:
         raise SystemExit("no real (non-smoke) experiment with metrics.json yet — "
                          "run a VisDrone experiment first")
+    if metrics["protocol"]["hash"] != protocol_hash():
+        print("WARNING: metrics predate the current protocol.yaml — numbers cited "
+              "here are from the OLD protocol; consider re-running eval")
 
-    facts = _dataset_facts(exp)
+    facts = _dataset_facts(metrics)
     agg = metrics.get("aggregate") or {}
     map_s = agg.get("map50_95_mean", "TODO")
     lat = agg.get("latency_ms_mean_mean") or (metrics.get("speed") or {}).get("latency_ms_mean", "TODO")

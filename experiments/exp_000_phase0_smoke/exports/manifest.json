@@ -5,7 +5,8 @@
     "source_sha256": "dd06e45e10027815",
     "opts": {
       "format": "onnx",
-      "imgsz": 640
+      "imgsz": 640,
+      "dynamic": true
     }
   }
 }

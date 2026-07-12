@@ -80,14 +80,22 @@ def _checks() -> dict[str, list[tuple[str, bool, str]]]:
     controlled = [e for e in exps if e in hyp_filled and e in decided]
     negatives = [e for e in decided if _frontmatter(e).get("outcome") == "negative"]
 
-    cmps = [_json(p) for p in COMPARISONS.glob("cmp_*.json")] if COMPARISONS.exists() else []
-    cmp_complete = [c for c in cmps if c.get("experiments") and all(
+    from .expmeta import protocol_hash
+    cmps_raw = [_json(p) for p in COMPARISONS.glob("cmp_*.json")] if COMPARISONS.exists() else []
+    # a comparison only counts if it matches the CURRENT protocol and actually
+    # compares two or more experiments
+    cmps = [c for c in cmps_raw
+            if c.get("protocol_hash") == protocol_hash()
+            and len(c.get("experiments") or []) >= 2]
+    cmp_complete = [c for c in cmps if all(
         row.get(k) is not None for row in c["experiments"]
         for k in ("latency_ms", "fps", "params_m", "gflops"))]
-    cmp_3seed = [c for c in cmps if c.get("experiments")
-                 and all(row.get("n_seeds", 0) >= 3 for row in c["experiments"])]
+    cmp_3seed = [c for c in cmps
+                 if all(row.get("n_seeds", 0) >= 3 for row in c["experiments"])]
 
-    parities = [e for e in exps if (e / "exports" / "parity_report.json").exists()]
+    # parity must actually PASS its recorded tolerances, not merely exist
+    parities = [e for e in exps
+                if _json(e / "exports" / "parity_report.json").get("passed") is True]
     benches = {e: _json(e / "exports" / "bench.json") for e in exps}
     trt = [e for e, b in benches.items() if any(k.startswith("trt") for k in b)]
     coreml_exports = [e for e in exps if list((e / "exports").glob("*.mlpackage"))]
@@ -134,7 +142,7 @@ def _checks() -> dict[str, list[tuple[str, bool, str]]]:
             ("important comparison has 3 seeds", bool(cmp_3seed), ""),
         ],
         "5. Deploy": [
-            ("ONNX parity report", bool(parities), _names(parities)),
+            ("ONNX parity within tolerance", bool(parities), _names(parities)),
             ("TensorRT latency benchmarked", bool(trt), _names(trt)),
             ("Core ML export or manual profile recorded", coreml_ok, ""),
         ],

@@ -1,17 +1,25 @@
 {
+  "passed": true,
   "seed": 17,
   "weights": "/home/hnyll/detection-engineering/experiments/exp_000_phase0_smoke/seeds/s17/weights/best.pt",
   "weights_sha256": "dd06e45e10027815",
   "onnx": "experiments/exp_000_phase0_smoke/exports/best_s17.onnx",
   "n_images": 64,
+  "map50_95_pt": 0.51631,
+  "map50_95_onnx": 0.51639,
+  "map50_95_delta": 8e-05,
   "boxes_pt": 395,
-  "boxes_onnx": 410,
-  "matched": 342,
-  "unmatched_pt": 53,
-  "unmatched_onnx": 68,
-  "conf_mad": 0.034723,
-  "conf_max_ad": 0.285021,
-  "coord_mad_px": 0.7964,
-  "match_iou": 0.9,
-  "conf_floor": 0.25
+  "boxes_onnx": 395,
+  "matched": 395,
+  "match_rate": 1.0,
+  "conf_mad": 0.000271,
+  "conf_max_ad": 0.002993,
+  "coord_mad_px": 0.0073,
+  "tolerances": {
+    "max_map_delta": 0.005,
+    "min_match_rate": 0.9,
+    "drift_conf_floor": 0.25,
+    "match_iou": 0.9,
+    "eval_conf": 0.001
+  }
 }

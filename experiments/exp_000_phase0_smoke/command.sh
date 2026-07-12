@@ -39,3 +39,6 @@ uv run python -m src.cli train exp_000_phase0_smoke --seeds 42
 
 # 2026-07-11T16:00:44+00:00 | git fde1cd2 | torch 2.9.1+cu128 | ultralytics 8.4.65
 uv run python -m src.cli eval exp_000_phase0_smoke
+
+# 2026-07-12T04:32:44+00:00 | git 9b3a02e | torch 2.9.1+cu128 | ultralytics 8.4.65
+uv run python -m src.cli eval exp_000_phase0_smoke
