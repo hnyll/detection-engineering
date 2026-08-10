@@ -1,0 +1,15 @@
+# Exp4: one architecture change for the original ten-class VisDrone Task 1.
+meta:
+  name: "p2_head_640"
+  parent_exp: "exp_001_baseline_640"
+  dataset: "visdrone"
+  seeds: [17]
+  causal_variable: "add a P2/stride-4 small-object detection head"
+  compensating_changes:
+    - "batch 16->8: extra high-resolution feature map for the P2 head"
+
+train:
+  model: "configs/yolo11n_p2.yaml"
+  imgsz: 640
+  epochs: 100
+  batch: 2

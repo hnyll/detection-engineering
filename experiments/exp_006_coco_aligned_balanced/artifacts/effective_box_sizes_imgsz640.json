@@ -1,0 +1,57 @@
+{
+  "dataset": "visdrone_exp006_coco_aligned",
+  "split": "val",
+  "imgsz": 640,
+  "instances": 38759,
+  "method": "For each YOLO box, multiply its source-pixel width and height by min(640/image_width, 640/image_height), matching full-image square letterbox scaling before padding.",
+  "classes": {
+    "person": {
+      "instances": 13969,
+      "median_width_px": 5.6,
+      "median_height_px": 12.3,
+      "median_sqrt_area_px": 8.4,
+      "pct_sqrt_area_lt_8px": 46.3,
+      "pct_min_side_lt_4px": 26.2
+    },
+    "bicycle": {
+      "instances": 1287,
+      "median_width_px": 9.4,
+      "median_height_px": 10.4,
+      "median_sqrt_area_px": 10.0,
+      "pct_sqrt_area_lt_8px": 33.4,
+      "pct_min_side_lt_4px": 13.7
+    },
+    "car": {
+      "instances": 16039,
+      "median_width_px": 18.3,
+      "median_height_px": 13.3,
+      "median_sqrt_area_px": 15.7,
+      "pct_sqrt_area_lt_8px": 18.9,
+      "pct_min_side_lt_4px": 6.2
+    },
+    "truck": {
+      "instances": 750,
+      "median_width_px": 21.6,
+      "median_height_px": 17.4,
+      "median_sqrt_area_px": 19.3,
+      "pct_sqrt_area_lt_8px": 12.0,
+      "pct_min_side_lt_4px": 2.1
+    },
+    "bus": {
+      "instances": 251,
+      "median_width_px": 16.0,
+      "median_height_px": 18.0,
+      "median_sqrt_area_px": 16.9,
+      "pct_sqrt_area_lt_8px": 15.5,
+      "pct_min_side_lt_4px": 2.4
+    },
+    "motorcycle": {
+      "instances": 6463,
+      "median_width_px": 10.4,
+      "median_height_px": 11.3,
+      "median_sqrt_area_px": 10.9,
+      "pct_sqrt_area_lt_8px": 30.2,
+      "pct_min_side_lt_4px": 10.5
+    }
+  }
+}

@@ -1,0 +1,11 @@
+source_class,group_id,group_name
+pedestrian,0,person
+people,0,person
+bicycle,1,bicycle
+car,2,car
+van,2,car
+truck,3,truck
+bus,4,bus
+motor,5,motorcycle
+tricycle,5,motorcycle
+awning-tricycle,5,motorcycle

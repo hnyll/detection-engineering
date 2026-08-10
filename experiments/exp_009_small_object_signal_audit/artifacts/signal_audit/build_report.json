@@ -1,0 +1,79 @@
+{
+  "experiment": "exp_009_small_object_signal_audit",
+  "dataset": "visdrone_exp006_coco_aligned",
+  "split": "val",
+  "gt_fingerprint": "e1142868d4dc2e9d",
+  "seed": 17,
+  "parameters": {
+    "samples_per_class": 20,
+    "max_area_exclusive": 1024.0,
+    "shortest_side_bins": [
+      {
+        "name": "micro",
+        "min_px": 0,
+        "max_px": 8
+      },
+      {
+        "name": "tiny",
+        "min_px": 8,
+        "max_px": 16
+      },
+      {
+        "name": "small",
+        "min_px": 16,
+        "max_px": null
+      }
+    ],
+    "context_scale": 4.0,
+    "minimum_context_px": 64.0,
+    "maximum_context_px": 256.0,
+    "display_size": 256,
+    "simulated_input_sizes": [
+      640,
+      960
+    ]
+  },
+  "samples": 120,
+  "unique_source_images": 120,
+  "one_per_image_relaxations": [],
+  "allocation": {
+    "person": {
+      "micro": 7,
+      "tiny": 7,
+      "small": 6
+    },
+    "bicycle": {
+      "micro": 7,
+      "tiny": 7,
+      "small": 6
+    },
+    "car": {
+      "micro": 7,
+      "tiny": 7,
+      "small": 6
+    },
+    "truck": {
+      "micro": 7,
+      "tiny": 7,
+      "small": 6
+    },
+    "bus": {
+      "micro": 7,
+      "tiny": 7,
+      "small": 6
+    },
+    "motorcycle": {
+      "micro": 7,
+      "tiny": 7,
+      "small": 6
+    }
+  },
+  "answers_sha256": "a6c60c97dd39820708258a8fd9277a3cd6d3c828bb66b1039fb46c999874c64e",
+  "review_template_sha256": "ca9ed5213c03f12b7670c10af67b7efe9ea6b22754ea22927cf8ae388e31e1b5",
+  "review_blinding": {
+    "gt_hidden": true,
+    "variant_identity_hidden": true,
+    "variant_column_order_randomized_per_sample": true,
+    "independent_variant_blinding": false
+  }
+}

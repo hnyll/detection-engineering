@@ -29,12 +29,87 @@ def load_config(exp_dir: Path) -> dict:
 
 # -- fixed evaluation protocol -------------------------------------------------
 
-def load_protocol() -> dict:
-    return yaml.safe_load(PROTOCOL_YAML.read_text())
+def protocol_overrides(cfg: dict) -> dict:
+    """Return an experiment's explicit evaluation-protocol overrides.
+
+    Most experiments use the repository-wide fixed protocol unchanged. A
+    protocol experiment may override a field (for example, inference imgsz)
+    without mutating protocol.yaml and invalidating historical artifacts.
+    """
+    evaluation = cfg.get("evaluation") or {}
+    overrides = evaluation.get("protocol_overrides") or {}
+    if not isinstance(overrides, dict):
+        raise SystemExit("evaluation.protocol_overrides must be a mapping")
+    return overrides
 
 
-def protocol_hash() -> str:
-    return hashlib.sha256(PROTOCOL_YAML.read_bytes()).hexdigest()[:16]
+def load_protocol(overrides: dict | None = None) -> dict:
+    protocol = yaml.safe_load(PROTOCOL_YAML.read_text())
+    overrides = overrides or {}
+    unknown = set(overrides) - set(protocol)
+    if unknown:
+        raise SystemExit(f"unknown evaluation protocol override(s): {sorted(unknown)}")
+    protocol.update(overrides)
+    return protocol
+
+
+def protocol_hash(overrides: dict | None = None, identity_extra: dict | None = None) -> str:
+    """Hash the base protocol plus any effective experiment-local overrides.
+
+    The no-override path intentionally preserves historical hashes, which were
+    computed directly from protocol.yaml bytes.
+    """
+    overrides = overrides or {}
+    base = yaml.safe_load(PROTOCOL_YAML.read_text())
+    effective = {k: v for k, v in overrides.items() if base.get(k) != v}
+    identity_extra = identity_extra or {}
+    if not effective and not identity_extra:
+        return hashlib.sha256(PROTOCOL_YAML.read_bytes()).hexdigest()[:16]
+    payload = (
+        PROTOCOL_YAML.read_bytes()
+        + b"\n# experiment protocol overrides\n"
+        + yaml.safe_dump(effective, sort_keys=True).encode()
+    )
+    if identity_extra:
+        payload += (
+            b"\n# inference-pipeline identity\n"
+            + yaml.safe_dump(identity_extra, sort_keys=True).encode()
+        )
+    return hashlib.sha256(payload).hexdigest()[:16]
+
+
+def inference_identity(cfg: dict) -> dict:
+    """Extra protocol identity for nonstandard prediction pipelines.
+
+    Full-frame experiments intentionally return an empty mapping so all
+    historical protocol hashes remain byte-for-byte valid. Tiling changes the
+    predictions even when imgsz/conf/NMS are unchanged, so it must receive a
+    distinct identity and ordinary comparison must refuse it.
+    """
+    evaluation = cfg.get("evaluation") or {}
+    identity = {}
+    model_pipeline = evaluation.get("model_pipeline") or {}
+    if model_pipeline:
+        if not isinstance(model_pipeline, dict):
+            raise SystemExit("evaluation.model_pipeline must be a mapping")
+        identity["model_pipeline"] = model_pipeline
+    raw_tiling = evaluation.get("tiling") or {}
+    if not raw_tiling or not raw_tiling.get("enabled", False):
+        return identity
+    if not isinstance(raw_tiling, dict):
+        raise SystemExit("evaluation.tiling must be a mapping")
+    # Hash the fully materialized settings (including implementation identity),
+    # not only keys explicitly written in YAML. A future default or merge-engine
+    # change must not masquerade as the same prediction protocol.
+    from .sliced_inference import normalized_tiling
+    tiling = normalized_tiling(cfg, load_protocol(protocol_overrides(cfg)))
+    identity["tiling"] = tiling
+    return identity
+
+
+def effective_protocol_hash(cfg: dict) -> str:
+    """Hash the fixed protocol, experiment overrides, and inference pipeline."""
+    return protocol_hash(protocol_overrides(cfg), inference_identity(cfg))
 
 
 def file_sha16(p: Path | str) -> str:
@@ -48,7 +123,12 @@ def stale_seeds(exp_dir: Path, metrics: dict) -> list[str]:
     out = []
     for sk, sv in (metrics.get("seeds") or {}).items():
         recorded = sv.get("weights_sha256")
-        w = exp_dir / "seeds" / sk / "weights" / "best.pt"
+        # Inference-only experiments may deliberately inherit a checkpoint
+        # from their parent. New metrics record that path per seed; historical
+        # metrics fall back to the experiment-local convention.
+        w = Path(sv.get("weights")) if sv.get("weights") else (
+            exp_dir / "seeds" / sk / "weights" / "best.pt"
+        )
         if recorded and w.exists() and file_sha16(w) != recorded:
             out.append(sk)
     return out

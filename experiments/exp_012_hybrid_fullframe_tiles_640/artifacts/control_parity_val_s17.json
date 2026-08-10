@@ -1,0 +1,66 @@
+{
+  "passed": true,
+  "selection": "first sorted validation image for each native (height, width)",
+  "cases": [
+    {
+      "passed": true,
+      "image": "0000001_02999_d_0000005.jpg",
+      "native_shape": [
+        1080,
+        1920
+      ],
+      "direct_predictions": 300,
+      "one_window_predictions": 300,
+      "one_window_count": 1,
+      "post_global_merge_predictions": 300,
+      "global_merge_removed": 0,
+      "class_order_match": true,
+      "max_box_delta": 0.0,
+      "max_score_delta": 0.0,
+      "tolerances": {
+        "box": 1e-05,
+        "score": 1e-07
+      }
+    },
+    {
+      "passed": true,
+      "image": "0000021_00000_d_0000001.jpg",
+      "native_shape": [
+        540,
+        960
+      ],
+      "direct_predictions": 294,
+      "one_window_predictions": 294,
+      "one_window_count": 1,
+      "post_global_merge_predictions": 292,
+      "global_merge_removed": 2,
+      "class_order_match": true,
+      "max_box_delta": 0.0,
+      "max_score_delta": 0.0,
+      "tolerances": {
+        "box": 1e-05,
+        "score": 1e-07
+      }
+    },
+    {
+      "passed": true,
+      "image": "0000026_00000_d_0000024.jpg",
+      "native_shape": [
+        765,
+        1360
+      ],
+      "direct_predictions": 26,
+      "one_window_predictions": 26,
+      "one_window_count": 1,
+      "post_global_merge_predictions": 26,
+      "global_merge_removed": 0,
+      "class_order_match": true,
+      "max_box_delta": 0.0,
+      "max_score_delta": 0.0,
+      "tolerances": {
+        "box": 1e-05,
+        "score": 1e-07
+      }
+    }
+  ]
+}

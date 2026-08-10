@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exp9 small-object signal audit</title>
+<style>
+  :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+  body { max-width: 1040px; margin: 24px auto; padding: 0 18px; background:#15161a; color:#eee; }
+  h1 { margin-bottom: 4px; } .muted { color:#aaa; }
+  .bar { height:10px; background:#30323a; border-radius:9px; overflow:hidden; margin:14px 0; }
+  .bar > div { height:100%; background:#58a6ff; width:0; }
+  .card { background:#202228; border:1px solid #383b44; border-radius:12px; padding:16px; }
+  img { width:100%; image-rendering:pixelated; border-radius:6px; background:#727272; }
+  .labels { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px; }
+  label { display:flex; flex-direction:column; gap:6px; font-weight:650; }
+  select, textarea, button { font:inherit; color:#eee; background:#2a2d34; border:1px solid #4b4f5a; border-radius:6px; padding:9px; }
+  textarea { width:100%; min-height:58px; box-sizing:border-box; margin-top:12px; }
+  .buttons { display:flex; gap:8px; flex-wrap:wrap; margin:15px 0; }
+  button { cursor:pointer; } button.primary { background:#1967b3; border-color:#388bfd; }
+  .warn { color:#f2cc60; }
+  @media (max-width:700px) { .labels { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<h1>Exp9 small-object signal audit</h1>
+<p class="muted">GT class and A/B/C resolution identities are hidden. The yellow corners mark the target. Choose independently for every view; use <b>uncertain</b> or <b>not_visible</b> rather than guessing.</p>
+<p class="warn">Do not open <code>answers.csv</code> before exporting your review.</p>
+<div id="progressText"></div><div class="bar"><div id="progressBar"></div></div>
+<div class="card">
+  <h2 id="sampleTitle"></h2>
+  <img id="triptych" alt="three blinded views">
+  <div class="labels" id="labels"></div>
+  <textarea id="notes" placeholder="Optional notes: ambiguity, occlusion, context-only cue, questionable target..."></textarea>
+</div>
+<div class="buttons">
+  <button id="prev">Previous</button><button id="next" class="primary">Save & next</button>
+  <button id="unreviewed">Next unreviewed</button><button id="export">Export CSV</button>
+  <button id="clear">Clear current</button>
+</div>
+<p class="muted">Progress is saved in this browser. Export periodically and at completion. Reviewing all 120 is preferred; the minimum planned analysis is 90 total with at least 15 GT examples per class, which can only be checked after scoring.</p>
+<script>
+const samples=[{"id":"S0001","triptych":"crops/triptych/S0001.png"},{"id":"S0002","triptych":"crops/triptych/S0002.png"},{"id":"S0003","triptych":"crops/triptych/S0003.png"},{"id":"S0004","triptych":"crops/triptych/S0004.png"},{"id":"S0005","triptych":"crops/triptych/S0005.png"},{"id":"S0006","triptych":"crops/triptych/S0006.png"},{"id":"S0007","triptych":"crops/triptych/S0007.png"},{"id":"S0008","triptych":"crops/triptych/S0008.png"},{"id":"S0009","triptych":"crops/triptych/S0009.png"},{"id":"S0010","triptych":"crops/triptych/S0010.png"},{"id":"S0011","triptych":"crops/triptych/S0011.png"},{"id":"S0012","triptych":"crops/triptych/S0012.png"},{"id":"S0013","triptych":"crops/triptych/S0013.png"},{"id":"S0014","triptych":"crops/triptych/S0014.png"},{"id":"S0015","triptych":"crops/triptych/S0015.png"},{"id":"S0016","triptych":"crops/triptych/S0016.png"},{"id":"S0017","triptych":"crops/triptych/S0017.png"},{"id":"S0018","triptych":"crops/triptych/S0018.png"},{"id":"S0019","triptych":"crops/triptych/S0019.png"},{"id":"S0020","triptych":"crops/triptych/S0020.png"},{"id":"S0021","triptych":"crops/triptych/S0021.png"},{"id":"S0022","triptych":"crops/triptych/S0022.png"},{"id":"S0023","triptych":"crops/triptych/S0023.png"},{"id":"S0024","triptych":"crops/triptych/S0024.png"},{"id":"S0025","triptych":"crops/triptych/S0025.png"},{"id":"S0026","triptych":"crops/triptych/S0026.png"},{"id":"S0027","triptych":"crops/triptych/S0027.png"},{"id":"S0028","triptych":"crops/triptych/S0028.png"},{"id":"S0029","triptych":"crops/triptych/S0029.png"},{"id":"S0030","triptych":"crops/triptych/S0030.png"},{"id":"S0031","triptych":"crops/triptych/S0031.png"},{"id":"S0032","triptych":"crops/triptych/S0032.png"},{"id":"S0033","triptych":"crops/triptych/S0033.png"},{"id":"S0034","triptych":"crops/triptych/S0034.png"},{"id":"S0035","triptych":"crops/triptych/S0035.png"},{"id":"S0036","triptych":"crops/triptych/S0036.png"},{"id":"S0037","triptych":"crops/triptych/S0037.png"},{"id":"S0038","triptych":"crops/triptych/S0038.png"},{"id":"S0039","triptych":"crops/triptych/S0039.png"},{"id":"S0040","triptych":"crops/triptych/S0040.png"},{"id":"S0041","triptych":"crops/triptych/S0041.png"},{"id":"S0042","triptych":"crops/triptych/S0042.png"},{"id":"S0043","triptych":"crops/triptych/S0043.png"},{"id":"S0044","triptych":"crops/triptych/S0044.png"},{"id":"S0045","triptych":"crops/triptych/S0045.png"},{"id":"S0046","triptych":"crops/triptych/S0046.png"},{"id":"S0047","triptych":"crops/triptych/S0047.png"},{"id":"S0048","triptych":"crops/triptych/S0048.png"},{"id":"S0049","triptych":"crops/triptych/S0049.png"},{"id":"S0050","triptych":"crops/triptych/S0050.png"},{"id":"S0051","triptych":"crops/triptych/S0051.png"},{"id":"S0052","triptych":"crops/triptych/S0052.png"},{"id":"S0053","triptych":"crops/triptych/S0053.png"},{"id":"S0054","triptych":"crops/triptych/S0054.png"},{"id":"S0055","triptych":"crops/triptych/S0055.png"},{"id":"S0056","triptych":"crops/triptych/S0056.png"},{"id":"S0057","triptych":"crops/triptych/S0057.png"},{"id":"S0058","triptych":"crops/triptych/S0058.png"},{"id":"S0059","triptych":"crops/triptych/S0059.png"},{"id":"S0060","triptych":"crops/triptych/S0060.png"},{"id":"S0061","triptych":"crops/triptych/S0061.png"},{"id":"S0062","triptych":"crops/triptych/S0062.png"},{"id":"S0063","triptych":"crops/triptych/S0063.png"},{"id":"S0064","triptych":"crops/triptych/S0064.png"},{"id":"S0065","triptych":"crops/triptych/S0065.png"},{"id":"S0066","triptych":"crops/triptych/S0066.png"},{"id":"S0067","triptych":"crops/triptych/S0067.png"},{"id":"S0068","triptych":"crops/triptych/S0068.png"},{"id":"S0069","triptych":"crops/triptych/S0069.png"},{"id":"S0070","triptych":"crops/triptych/S0070.png"},{"id":"S0071","triptych":"crops/triptych/S0071.png"},{"id":"S0072","triptych":"crops/triptych/S0072.png"},{"id":"S0073","triptych":"crops/triptych/S0073.png"},{"id":"S0074","triptych":"crops/triptych/S0074.png"},{"id":"S0075","triptych":"crops/triptych/S0075.png"},{"id":"S0076","triptych":"crops/triptych/S0076.png"},{"id":"S0077","triptych":"crops/triptych/S0077.png"},{"id":"S0078","triptych":"crops/triptych/S0078.png"},{"id":"S0079","triptych":"crops/triptych/S0079.png"},{"id":"S0080","triptych":"crops/triptych/S0080.png"},{"id":"S0081","triptych":"crops/triptych/S0081.png"},{"id":"S0082","triptych":"crops/triptych/S0082.png"},{"id":"S0083","triptych":"crops/triptych/S0083.png"},{"id":"S0084","triptych":"crops/triptych/S0084.png"},{"id":"S0085","triptych":"crops/triptych/S0085.png"},{"id":"S0086","triptych":"crops/triptych/S0086.png"},{"id":"S0087","triptych":"crops/triptych/S0087.png"},{"id":"S0088","triptych":"crops/triptych/S0088.png"},{"id":"S0089","triptych":"crops/triptych/S0089.png"},{"id":"S0090","triptych":"crops/triptych/S0090.png"},{"id":"S0091","triptych":"crops/triptych/S0091.png"},{"id":"S0092","triptych":"crops/triptych/S0092.png"},{"id":"S0093","triptych":"crops/triptych/S0093.png"},{"id":"S0094","triptych":"crops/triptych/S0094.png"},{"id":"S0095","triptych":"crops/triptych/S0095.png"},{"id":"S0096","triptych":"crops/triptych/S0096.png"},{"id":"S0097","triptych":"crops/triptych/S0097.png"},{"id":"S0098","triptych":"crops/triptych/S0098.png"},{"id":"S0099","triptych":"crops/triptych/S0099.png"},{"id":"S0100","triptych":"crops/triptych/S0100.png"},{"id":"S0101","triptych":"crops/triptych/S0101.png"},{"id":"S0102","triptych":"crops/triptych/S0102.png"},{"id":"S0103","triptych":"crops/triptych/S0103.png"},{"id":"S0104","triptych":"crops/triptych/S0104.png"},{"id":"S0105","triptych":"crops/triptych/S0105.png"},{"id":"S0106","triptych":"crops/triptych/S0106.png"},{"id":"S0107","triptych":"crops/triptych/S0107.png"},{"id":"S0108","triptych":"crops/triptych/S0108.png"},{"id":"S0109","triptych":"crops/triptych/S0109.png"},{"id":"S0110","triptych":"crops/triptych/S0110.png"},{"id":"S0111","triptych":"crops/triptych/S0111.png"},{"id":"S0112","triptych":"crops/triptych/S0112.png"},{"id":"S0113","triptych":"crops/triptych/S0113.png"},{"id":"S0114","triptych":"crops/triptych/S0114.png"},{"id":"S0115","triptych":"crops/triptych/S0115.png"},{"id":"S0116","triptych":"crops/triptych/S0116.png"},{"id":"S0117","triptych":"crops/triptych/S0117.png"},{"id":"S0118","triptych":"crops/triptych/S0118.png"},{"id":"S0119","triptych":"crops/triptych/S0119.png"},{"id":"S0120","triptych":"crops/triptych/S0120.png"}];
+const choices=["person", "bicycle", "car", "truck", "bus", "motorcycle", "uncertain", "not_visible"];
+const key='exp9-signal-audit-a6c60c97dd398207';
+let state=JSON.parse(localStorage.getItem(key)||'{}'); let idx=0;
+const labels=document.getElementById('labels');
+for (const v of ['a','b','c']) {
+  const lab=document.createElement('label'); lab.textContent='VIEW '+v.toUpperCase();
+  const sel=document.createElement('select'); sel.id='label_'+v;
+  sel.innerHTML='<option value="">Choose…</option>'+choices.map(x=>`<option value="${x}">${x}</option>`).join('');
+  sel.addEventListener('change',save); lab.appendChild(sel); labels.appendChild(lab);
+}
+document.getElementById('notes').addEventListener('input',save);
+function reviewed(s) { const r=state[s.id]||{}; return ['a','b','c'].every(v=>r['label_'+v]); }
+function save() {
+  const s=samples[idx]; const r=state[s.id]||{};
+  for (const v of ['a','b','c']) r['label_'+v]=document.getElementById('label_'+v).value;
+  r.notes=document.getElementById('notes').value; state[s.id]=r;
+  localStorage.setItem(key,JSON.stringify(state)); progress();
+}
+function load() {
+  const s=samples[idx], r=state[s.id]||{};
+  document.getElementById('sampleTitle').textContent=`${idx+1} / ${samples.length} — ${s.id}`;
+  document.getElementById('triptych').src=s.triptych;
+  for (const v of ['a','b','c']) document.getElementById('label_'+v).value=r['label_'+v]||'';
+  document.getElementById('notes').value=r.notes||''; progress(); window.scrollTo(0,0);
+}
+function progress() {
+  const n=samples.filter(reviewed).length;
+  document.getElementById('progressText').textContent=`${n} / ${samples.length} triptychs complete`;
+  document.getElementById('progressBar').style.width=(100*n/samples.length)+'%';
+}
+document.getElementById('prev').onclick=()=>{save();idx=(idx-1+samples.length)%samples.length;load();};
+document.getElementById('next').onclick=()=>{save();idx=Math.min(samples.length-1,idx+1);load();};
+document.getElementById('unreviewed').onclick=()=>{save();const j=samples.findIndex((s,i)=>i>idx&&!reviewed(s));const k=j>=0?j:samples.findIndex(s=>!reviewed(s));if(k>=0){idx=k;load();}};
+document.getElementById('clear').onclick=()=>{state[samples[idx].id]={};localStorage.setItem(key,JSON.stringify(state));load();};
+function q(x) { return '"'+String(x??'').replaceAll('"','""')+'"'; }
+document.getElementById('export').onclick=()=>{save();let rows=[['sample_id','triptych','label_a','label_b','label_c','notes']];for(const s of samples){const r=state[s.id]||{};rows.push([s.id,s.triptych,r.label_a||'',r.label_b||'',r.label_c||'',r.notes||'']);}const csv=rows.map(r=>r.map(q).join(',')).join('\n')+'\n';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='review_completed.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
+load();
+</script>
+</body></html>

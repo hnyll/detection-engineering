@@ -9,8 +9,15 @@
     "fp": 128910,
     "fn": 15628
   },
-  "reviewed_failures": 0,
-  "label_tags": {},
+  "reviewed_failures": 48,
+  "label_tags": {
+    "reviewed": 52,
+    "blur": 6,
+    "tiny": 35,
+    "low-light": 11,
+    "wrong class": 1,
+    "occluded": 10
+  },
   "sample_tags": {},
   "saved_views": [
     "crowded",

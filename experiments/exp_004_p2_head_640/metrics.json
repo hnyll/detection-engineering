@@ -1,0 +1,120 @@
+{
+  "protocol": {
+    "hash": "a9b8207b3cc7a070",
+    "dataset": "visdrone",
+    "split": "val",
+    "gt": "7ada432ff36fe090",
+    "imgsz": 640,
+    "conf": 0.001,
+    "iou": 0.7,
+    "max_det": 300
+  },
+  "n_seeds": 1,
+  "aggregate": {
+    "map50_95_mean": 0.1647,
+    "map50_95_std": null,
+    "map50_mean": 0.28544,
+    "map50_std": null,
+    "map75_mean": 0.161,
+    "map75_std": null,
+    "ap_small_mean": 0.09465,
+    "ap_small_std": null,
+    "ap_medium_mean": 0.24558,
+    "ap_medium_std": null,
+    "ap_large_mean": 0.34997,
+    "ap_large_std": null,
+    "latency_ms_mean_mean": 10.69,
+    "latency_ms_mean_std": null,
+    "fps_batch1_mean": 93.5,
+    "fps_batch1_std": null
+  },
+  "overall": {
+    "map50_95": 0.1647,
+    "map50": 0.28544,
+    "map75": 0.161,
+    "ap_small": 0.09465,
+    "ap_medium": 0.24558,
+    "ap_large": 0.34997,
+    "ar_max": 0.26817
+  },
+  "per_class": {
+    "pedestrian": {
+      "ap50_95": 0.16091,
+      "ap50": 0.36261,
+      "ap50_95_std": null
+    },
+    "people": {
+      "ap50_95": 0.09895,
+      "ap50": 0.26344,
+      "ap50_95_std": null
+    },
+    "bicycle": {
+      "ap50_95": 0.02286,
+      "ap50": 0.05494,
+      "ap50_95_std": null
+    },
+    "car": {
+      "ap50_95": 0.51737,
+      "ap50": 0.76266,
+      "ap50_95_std": null
+    },
+    "van": {
+      "ap50_95": 0.1998,
+      "ap50": 0.27613,
+      "ap50_95_std": null
+    },
+    "truck": {
+      "ap50_95": 0.13444,
+      "ap50": 0.21123,
+      "ap50_95_std": null
+    },
+    "tricycle": {
+      "ap50_95": 0.08358,
+      "ap50": 0.1497,
+      "ap50_95_std": null
+    },
+    "awning-tricycle": {
+      "ap50_95": 0.04164,
+      "ap50": 0.06122,
+      "ap50_95_std": null
+    },
+    "bus": {
+      "ap50_95": 0.2289,
+      "ap50": 0.3406,
+      "ap50_95_std": null
+    },
+    "motor": {
+      "ap50_95": 0.15851,
+      "ap50": 0.37193,
+      "ap50_95_std": null
+    }
+  },
+  "speed": {
+    "latency_ms_mean": 10.69,
+    "latency_ms_p50": 10.38,
+    "latency_ms_p95": 11.67,
+    "fps_batch1": 93.5,
+    "device": "NVIDIA GeForce RTX 4060",
+    "n_timed": 100
+  },
+  "model": {
+    "params_m": 2.66,
+    "gflops": 10.21,
+    "weights": "/home/hnyll/detection-engineering/experiments/exp_004_p2_head_640/seeds/s17/weights/best.pt",
+    "weights_sha256": "dabf4dfe33adc104"
+  },
+  "seeds": {
+    "s17": {
+      "map50_95": 0.1647,
+      "map50": 0.28544,
+      "ap_small": 0.09465,
+      "weights_sha256": "dabf4dfe33adc104"
+    }
+  },
+  "env": {
+    "python": "3.10.12",
+    "torch": "2.9.1+cu128",
+    "ultralytics": "8.4.65",
+    "git_sha": "e10f4e5"
+  }
+}

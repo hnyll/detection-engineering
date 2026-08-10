@@ -9,6 +9,10 @@ def _seeds(s: str) -> list[int]:
     return [int(x) for x in s.split(",") if x.strip()]
 
 
+def _floats(s: str) -> list[float]:
+    return [float(x) for x in s.split(",") if x.strip()]
+
+
 def main() -> None:
     p = argparse.ArgumentParser(prog="python -m src.cli", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -24,6 +28,11 @@ def main() -> None:
     sp.add_argument("--interrupt-after", type=int, default=None,
                     help="raise KeyboardInterrupt after N epochs (resume-proof test)")
 
+    sp = sub.add_parser("model-smoke", help="real-data hardware smoke for a custom detector")
+    sp.add_argument("exp")
+    sp.add_argument("--batches", type=int, default=10)
+    sp.add_argument("--seed", type=int, default=17)
+
     sp = sub.add_parser("eval", help="fixed-protocol evaluation -> metrics.json")
     sp.add_argument("exp")
     sp.add_argument("--seed", type=int, default=None)
@@ -32,6 +41,14 @@ def main() -> None:
     sp = sub.add_parser("tide", help="TIDE error taxonomy -> tide_report.json")
     sp.add_argument("exp")
     sp.add_argument("--seed", type=int, default=None)
+
+    sp = sub.add_parser("threshold-sweep", help="calibrate confidence on fixed predictions")
+    sp.add_argument("exp")
+    sp.add_argument("--seed", type=int, default=None)
+    sp.add_argument("--iou", type=float, default=0.5,
+                    help="same-class one-to-one matching IoU (default: 0.5)")
+    sp.add_argument("--thresholds", type=_floats, default=None,
+                    help="comma-separated confidence thresholds (default: .05,.10,.15,.20,.25)")
 
     sp = sub.add_parser("review", help="FiftyOne failure review")
     sp.add_argument("exp")
@@ -85,12 +102,18 @@ def main() -> None:
         from .train import train
         train(a.exp, seeds=a.seeds, resume=a.resume,
               interrupt_after=a.interrupt_after, epochs=a.epochs)
+    elif a.cmd == "model-smoke":
+        from .convnext_frcnn import hardware_smoke
+        hardware_smoke(a.exp, batches=a.batches, seed=a.seed)
     elif a.cmd == "eval":
         from .evaluate import evaluate
         evaluate(a.exp, seed=a.seed, weights=a.weights)
     elif a.cmd == "tide":
         from .tide_wrap import run_tide
         run_tide(a.exp, seed=a.seed)
+    elif a.cmd == "threshold-sweep":
+        from .threshold_sweep import threshold_sweep
+        threshold_sweep(a.exp, seed=a.seed, thresholds=a.thresholds, iou_threshold=a.iou)
     elif a.cmd == "review":
         from .fo_review import review
         review(a.exp, seed=a.seed, launch=a.launch, export_stats=a.export_stats)

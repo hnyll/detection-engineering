@@ -1,0 +1,32 @@
+# Exp10 changes only inverse-frequency classification weighting relative to Exp8.
+meta:
+  name: "class_weighted_960"
+  parent_exp: "exp_008_train_960"
+  dataset: "visdrone_exp006_coco_aligned"
+  train_dataset: "visdrone_exp006_coco_aligned_balanced"
+  seeds: [17]
+  causal_variable: "Ultralytics classification class-weight power: cls_pw 0.0 -> 0.25"
+  compensating_changes: []
+  mapping_csv: "experiments/exp_006_coco_aligned_balanced/class_groups.csv"
+  initial_weights_sha256: "0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1"
+  train_manifest_sha256: "2b3a16c59f595c3bb51582b66849d9bc2dbebbce2eb0b5700edd292551ea74d3"
+  expected_class_weights:
+    person: 0.697288
+    bicycle: 1.230415
+    car: 0.616731
+    truck: 1.171289
+    bus: 1.380974
+    motorcycle: 0.903303
+
+evaluation:
+  protocol_overrides:
+    imgsz: 960
+  expected_gt: "e1142868d4dc2e9d"
+
+train:
+  model: "yolo11n.pt"
+  imgsz: 960
+  epochs: 100
+  batch: 4
+  nbs: 64
+  cls_pw: 0.25

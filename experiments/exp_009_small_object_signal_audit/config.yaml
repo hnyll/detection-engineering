@@ -1,0 +1,42 @@
+# Exp9 is a diagnostic audit, not a detector-training run. It samples native
+# COCO-small validation objects and renders the same field of view after
+# simulated full-image 640 and 960 resizing.
+meta:
+  name: "small_object_signal_audit"
+  parent_exp: "exp_008_train_960"
+  dataset: "visdrone_exp006_coco_aligned"
+  seeds: [17]
+  analysis_only: true
+  causal_variable: "human-identifiable class signal across simulated 640, simulated 960, and native source pixels"
+  compensating_changes:
+    - "balanced sampling by class and native shortest-side bin is diagnostic and does not estimate deployment prevalence"
+
+# Retained because the experiment schema requires a train section. Exp9 does
+# not train; src.train intentionally refuses analysis-only experiments.
+train:
+  model: "yolo11n.pt"
+  imgsz: 960
+  epochs: 0
+  batch: 4
+
+audit:
+  split: "val"
+  seed: 17
+  samples_per_class: 20
+  coco_small_area_max: 1024
+  shortest_side_bins:
+    - name: "micro"
+      min_px: 0
+      max_px: 8
+    - name: "tiny"
+      min_px: 8
+      max_px: 16
+    - name: "small"
+      min_px: 16
+      max_px: null
+  context_scale: 4.0
+  minimum_context_px: 64
+  maximum_context_px: 256
+  display_size: 256
+  simulated_input_sizes: [640, 960]
+  expected_gt: "e1142868d4dc2e9d"

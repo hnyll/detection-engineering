@@ -1,0 +1,43 @@
+# Exp11 is inference-only. It reuses the exact Exp10 checkpoint and replaces
+# one full-frame pass with deterministic overlapping native-source tiles.
+meta:
+  name: "tiled_inference_640"
+  parent_exp: "exp_010_class_weighted_960"
+  dataset: "visdrone_exp006_coco_aligned"
+  seeds: [17]
+  inference_only: true
+  causal_variable: "full-frame 960 inference -> native 640x640 tiled inference with 20% overlap"
+  compensating_changes:
+    - "multiple tile passes, coordinate remapping, and deterministic global class-aware NMS are required by tiling"
+
+evaluation:
+  protocol_overrides:
+    imgsz: 960
+  weights_from:
+    experiment: "exp_010_class_weighted_960"
+    seed: 17
+    sha256: "d078cf0e25577202"
+  expected_gt: "e1142868d4dc2e9d"
+  tiling:
+    enabled: true
+    tile_height: 640
+    tile_width: 640
+    overlap_height_ratio: 0.20
+    overlap_width_ratio: 0.20
+    include_full_image: false
+    tile_batch: 1
+    per_tile_conf: 0.001
+    per_tile_nms_iou: 0.70
+    per_tile_max_det: 300
+    merge: "class_aware_nms"
+    merge_iou: 0.70
+    global_max_det: 300
+
+# Documentation only: inference-only experiments refuse training.
+train:
+  model: "yolo11n.pt"
+  imgsz: 960
+  epochs: 100
+  batch: 4
+  nbs: 64
+  cls_pw: 0.25

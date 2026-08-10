@@ -11,6 +11,17 @@ dependencies = [
     "pycocotools==2.0.8",
     "wandb==0.19.11",
     "fiftyone==1.5.2",
+    "strawberry-graphql==0.290.0",  # fiftyone 1.5.2's server still uses the 'graphiql' kwarg,
+                                     # removed in strawberry-graphql 0.295.0; unpinned, uv
+                                     # resolves latest and the FiftyOne app fails to launch
+                                     # (TypeError: GraphQL.__init__() got an unexpected keyword
+                                     # argument 'graphiql'). Bisected known-good: 0.290.0 works,
+                                     # 0.295.0 breaks.
+    "starlette==0.52.1",  # fiftyone 1.5.2's static-file serving still passes a 'method' kwarg
+                           # to starlette.responses.FileResponse.__init__(), removed in
+                           # starlette 1.0.0; unpinned, uv resolves latest (1.x) and the app
+                           # 500s on every static asset request. Bisected known-good: 0.52.1
+                           # (last pre-1.0 release) works, 1.0.0 breaks.
     "sahi==0.11.20",
     "tidecv==1.0.1",
     "onnx==1.17.0",
@@ -19,6 +30,7 @@ dependencies = [
     "coremltools==8.2",
     "matplotlib==3.9.2",
     "pandas==2.2.3",
+    "tqdm==4.68.4",
     "PyYAML==6.0.2",
 ]
 

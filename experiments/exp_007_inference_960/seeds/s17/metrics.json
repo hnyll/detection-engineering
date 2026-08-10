@@ -1,0 +1,82 @@
+{
+  "protocol": {
+    "hash": "821306fe3a07ceac",
+    "base_hash": "a9b8207b3cc7a070",
+    "overrides": {
+      "imgsz": 960
+    },
+    "dataset": "visdrone_exp006_coco_aligned",
+    "split": "val",
+    "gt": "e1142868d4dc2e9d",
+    "imgsz": 960,
+    "conf": 0.001,
+    "iou": 0.7,
+    "max_det": 300
+  },
+  "seed": 17,
+  "custom_weights": null,
+  "overall": {
+    "map50_95": 0.26661,
+    "map50": 0.44897,
+    "map75": 0.27169,
+    "ap_small": 0.17284,
+    "ap_medium": 0.3721,
+    "ap_large": 0.46163,
+    "ar_max": 0.36598
+  },
+  "per_class": {
+    "person": {
+      "ap50_95": 0.20608,
+      "ap50": 0.4989
+    },
+    "bicycle": {
+      "ap50_95": 0.05032,
+      "ap50": 0.11042
+    },
+    "car": {
+      "ap50_95": 0.58265,
+      "ap50": 0.84836
+    },
+    "truck": {
+      "ap50_95": 0.19643,
+      "ap50": 0.29674
+    },
+    "bus": {
+      "ap50_95": 0.36615,
+      "ap50": 0.50194
+    },
+    "motorcycle": {
+      "ap50_95": 0.19802,
+      "ap50": 0.43748
+    }
+  },
+  "diagnostics": {
+    "images": 548,
+    "images_at_max_det": 476,
+    "pct_images_at_max_det": 86.86
+  },
+  "speed": {
+    "latency_ms_mean": 10.77,
+    "latency_ms_p50": 10.13,
+    "latency_ms_p95": 12.72,
+    "fps_batch1": 92.9,
+    "device": "NVIDIA GeForce RTX 4060",
+    "n_timed": 100
+  },
+  "model": {
+    "params_m": 2.583,
+    "gflops": 14.22,
+    "weights": "/home/hnyll/detection-engineering/experiments/exp_006_coco_aligned_balanced/seeds/s17/weights/best.pt",
+    "weights_sha256": "eaed04c240d52e73",
+    "weights_source": {
+      "experiment": "exp_006_coco_aligned_balanced",
+      "seed": 17
+    }
+  },
+  "env": {
+    "python": "3.10.12",
+    "torch": "2.9.1+cu128",
+    "ultralytics": "8.4.65",
+    "git_sha": "e10f4e5"
+  }
+}

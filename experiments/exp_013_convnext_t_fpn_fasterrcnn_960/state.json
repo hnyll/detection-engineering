@@ -1,0 +1,16 @@
+{
+  "runs": [
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_013_convnext_t_fpn_fasterrcnn_960_s17",
+      "status": "interrupted",
+      "model_family": "torchvision_fasterrcnn_convnext",
+      "wandb_mode": "online",
+      "wandb_id": "ovq7oam7",
+      "checkpoint": "/home/hnyll/detection-engineering/runs/exp_013_convnext_t_fpn_fasterrcnn_960_s17/weights/last.pt",
+      "best_map50_95": -1.0,
+      "peak_rss_mb": 3363,
+      "timestamp": 1786346992.805804
+    }
+  ]
+}

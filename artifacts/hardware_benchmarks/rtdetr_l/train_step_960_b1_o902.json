@@ -1,0 +1,62 @@
+{
+  "schema_version": 2,
+  "mode": "train-step",
+  "model": "rtdetr-l.pt",
+  "weights": "/home/hnyll/detection-engineering/rtdetr-l.pt",
+  "weights_sha256": "6de60b10d4bc566f00cda0f5b4d64afe4b66d48dc9695d2171effb7859d8e73f",
+  "weights_bytes": 66511432,
+  "imgsz": 960,
+  "batch": 1,
+  "software": {
+    "python": "3.10.12",
+    "torch": "2.9.1+cu128",
+    "ultralytics": "8.4.65"
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 4060",
+    "total_vram_mib": 8187.5,
+    "torch_cuda": "12.8",
+    "cudnn": 91002
+  },
+  "notes": [
+    "Hardware-feasibility measurement only; pretrained COCO predictions are not VisDrone accuracy results.",
+    "PyTorch execution; no TensorRT, export, or architecture-specific deployment optimization."
+  ],
+  "objects_per_image": 902,
+  "steps": 1,
+  "nc": 6,
+  "precision": "amp-fp16",
+  "includes": [
+    "forward",
+    "RT-DETR loss",
+    "backward",
+    "AdamW first step",
+    "EMA update"
+  ],
+  "limitations": [
+    "Synthetic tensors avoid dataloader variability but exercise the real six-class RT-DETR loss.",
+    "Does not prove a full epoch or every possible CUDA kernel will succeed.",
+    "Dense-label memory is explicitly tested because RT-DETR creates denoising queries from max GT count."
+  ],
+  "status": "pass",
+  "params": 32818406,
+  "params_m": 32.818,
+  "step_times_ms": [
+    39547.916
+  ],
+  "first_step_ms": 39547.916,
+  "steady_step_ms_mean": 39547.916,
+  "loss": 41.834881,
+  "loss_items": [
+    1.540525,
+    0.435129,
+    1.225123
+  ],
+  "host_rss_mib": 2754.17,
+  "cuda_memory_mib": {
+    "baseline_allocated": 266.2,
+    "baseline_reserved": 270.0,
+    "peak_allocated": 3358.98,
+    "peak_reserved": 3616.0
+  }
+}

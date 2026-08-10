@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "experiment": "exp_013_convnext_t_fpn_fasterrcnn_960",
+  "model_family": "torchvision_fasterrcnn_convnext",
+  "architecture": "convnext_tiny_fpn_fasterrcnn",
+  "seed": 17,
+  "batches": 5,
+  "imgsz": 960,
+  "batch": 1,
+  "amp": true,
+  "weights": "/home/hnyll/.cache/torch/hub/checkpoints/convnext_tiny-983f1562.pth",
+  "weights_sha256": "983f1562536e84ff750a1576fb08e54de751dbf2e17c0d8a4a13704341fdcd3d",
+  "parameters": 45074066,
+  "object_counts": [
+    902,
+    512,
+    462,
+    431,
+    370
+  ],
+  "losses": [
+    3.253535032272339,
+    2.2432315349578857,
+    2.2275965213775635,
+    2.2633328437805176,
+    2.049502372741699
+  ],
+  "step_times_ms": [
+    37291.86761299934,
+    164.82999499930884,
+    110.99162000027718,
+    109.33769300027052,
+    105.22738099825801
+  ],
+  "steady_step_ms_median": 110.16465650027385,
+  "elapsed_seconds": 37.89111521199811,
+  "peak_allocated_mib": 4998.00439453125,
+  "peak_reserved_mib": 5018.0,
+  "baseline_reserved_mib": 198.0,
+  "process_rss_mib": 2779.91015625,
+  "gpu": "NVIDIA GeForce RTX 4060",
+  "notes": [
+    "Real images and labels, standard torchvision transform, horizontal flip only.",
+    "Dense unique manifest images are intentionally evaluated first.",
+    "This smoke does not create or modify experiment checkpoints."
+  ]
+}

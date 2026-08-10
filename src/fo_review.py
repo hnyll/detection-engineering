@@ -14,7 +14,7 @@ from pathlib import Path
 
 from . import paths
 from .data_coco import build_gt, class_names, image_dir
-from .expmeta import load_config, load_protocol
+from .expmeta import load_config, load_protocol, protocol_overrides
 
 CONDITION_TAGS = ("tiny", "crowded", "occluded", "blur", "low-light", "truncation", "reviewed")
 
@@ -116,7 +116,8 @@ def review(exp_ref: str, seed: int | None = None, launch: bool = False,
     exp_dir = paths.resolve_exp(exp_ref)
     cfg = load_config(exp_dir)
     dataset = cfg["meta"]["dataset"]
-    split = load_protocol()["split"]
+    proto = load_protocol(protocol_overrides(cfg))
+    split = proto["split"]
     if seed is None:
         # config seed order, matching export/parity defaults (lexicographic file
         # order would pick s1337 over s17)
@@ -154,7 +155,7 @@ def review(exp_ref: str, seed: int | None = None, launch: bool = False,
                                compute_mAP=True)
 
     # saved views for the failure-analysis conditions
-    tiny_thresh = (32 / load_protocol()["imgsz"]) ** 2
+    tiny_thresh = (32 / proto["imgsz"]) ** 2
     views = {
         "tiny_gt": ds.filter_labels(
             "ground_truth", (F("bounding_box")[2] * F("bounding_box")[3]) < tiny_thresh),

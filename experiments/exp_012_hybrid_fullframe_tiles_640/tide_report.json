@@ -1,0 +1,59 @@
+{
+  "method": "tidecv",
+  "dAP": {
+    "Cls": 12.044,
+    "Loc": 4.147,
+    "Both": 0.833,
+    "Dupe": 1.976,
+    "Bkg": 3.046,
+    "Miss": 6.799
+  },
+  "special_dAP": {
+    "FalsePos": 19.762,
+    "FalseNeg": 17.648
+  },
+  "counts": null,
+  "notes": "dAP = AP gained by oracle-fixing that error type (TIDE paper definition)",
+  "dataset": "visdrone_exp006_coco_aligned",
+  "split": "val",
+  "protocol": {
+    "hash": "051e7ff3d9dcb3e0",
+    "base_hash": "a9b8207b3cc7a070",
+    "overrides": {
+      "imgsz": 960
+    },
+    "gt": "e1142868d4dc2e9d",
+    "imgsz": 960,
+    "conf": 0.001,
+    "iou": 0.7,
+    "max_det": 300,
+    "inference": {
+      "tiling": {
+        "enabled": true,
+        "schema_version": 2,
+        "implementation": "sahi.get_slice_bboxes+torchvision.batched_nms",
+        "implementation_sha256": "eff17e3fed47ac67",
+        "dependencies": {
+          "sahi": "0.11.20",
+          "torchvision": "0.24.1+cu128",
+          "opencv": "4.10.0.84"
+        },
+        "tile_height": 640,
+        "tile_width": 640,
+        "overlap_height_ratio": 0.2,
+        "overlap_width_ratio": 0.2,
+        "include_full_image": true,
+        "tile_batch": 1,
+        "per_tile_conf": 0.001,
+        "per_tile_nms_iou": 0.7,
+        "per_tile_max_det": 300,
+        "merge": "class_aware_nms",
+        "merge_iou": 0.7,
+        "global_max_det": 300
+      }
+    }
+  },
+  "predictions": "predictions_val_s17.json",
+  "predictions_sha256": "a532e51fa6247ab0",
+  "weights_sha256": "d078cf0e25577202"
+}

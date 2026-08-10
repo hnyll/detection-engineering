@@ -1,0 +1,27 @@
+# Exp8 trains at the 960 inference resolution established by Exp7. Evaluation
+# uses the same effective protocol as Exp7 so the trained checkpoints are
+# directly comparable at a common operating resolution.
+meta:
+  name: "train_960"
+  parent_exp: "exp_007_inference_960"
+  dataset: "visdrone_exp006_coco_aligned"
+  train_dataset: "visdrone_exp006_coco_aligned_balanced"
+  seeds: [17]
+  causal_variable: "training imgsz: 640 -> 960 while evaluation remains imgsz=960"
+  compensating_changes:
+    - "batch 16 -> 4 for the 8 GB RTX 4060; nbs=64 preserves the nominal accumulated batch, but microbatch and BatchNorm statistics differ"
+  mapping_csv: "experiments/exp_006_coco_aligned_balanced/class_groups.csv"
+  initial_weights_sha256: "0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1"
+  train_manifest_sha256: "2b3a16c59f595c3bb51582b66849d9bc2dbebbce2eb0b5700edd292551ea74d3"
+
+evaluation:
+  protocol_overrides:
+    imgsz: 960
+  expected_gt: "e1142868d4dc2e9d"
+
+train:
+  model: "yolo11n.pt"
+  imgsz: 960
+  epochs: 100
+  batch: 4
+  nbs: 64

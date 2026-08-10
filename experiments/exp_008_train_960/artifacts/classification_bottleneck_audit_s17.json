@@ -1,0 +1,147 @@
+{
+  "method": "exact tidecv assignment audit plus original VisDrone metadata join",
+  "scope": "diagnostic counts and independent oracle fixes; not a manual review",
+  "provenance": {
+    "experiment": "exp_008_train_960",
+    "seed": 17,
+    "dataset": "visdrone_exp006_coco_aligned",
+    "split": "val",
+    "gt_fingerprint": "e1142868d4dc2e9d",
+    "predictions_sha256_16": "ffd266196e969365",
+    "weights_sha256_16": "e1a30d15043d5955",
+    "protocol_hash": "821306fe3a07ceac",
+    "confidence_floor": 0.001,
+    "max_det": 300,
+    "tide_foreground_iou": 0.5,
+    "tide_background_iou": 0.1,
+    "source_annotation_directory": "/home/hnyll/drone/data/VisDrone2019-DET-val/annotations",
+    "source_annotation_manifest_sha256": "b8f703fdb297c5b937bd02ec0af0c5c7fa9fac2dc9ad94131904035c86244e57",
+    "source_annotation_hash_method": "sha256(sorted sha256sum output for ./<filename>.txt)"
+  },
+  "assignment_counts": {
+    "ground_truth": 38759,
+    "predictions": 152715,
+    "true_positive": 29752,
+    "false_negative_all_unmatched_gt": 9007,
+    "false_positive_all_unmatched_predictions": 122963,
+    "prediction_error_taxonomy": {
+      "Cls": 6230,
+      "Loc": 26689,
+      "Both": 11001,
+      "Dupe": 12960,
+      "Bkg": 66083
+    },
+    "unmatched_gt_attribution": {
+      "classification_only": 1241,
+      "localization_only": 2971,
+      "classification_and_localization": 238,
+      "irrecoverable_Miss": 4557
+    }
+  },
+  "classification": {
+    "tide_Cls_dAP": 14.255,
+    "detections": 6230,
+    "unique_gt_touched": 4603,
+    "unique_gt_already_true_positive": 3124,
+    "unique_gt_otherwise_unmatched": 1479,
+    "score_bins": {
+      "[0.001,0.01)": 575,
+      "[0.01,0.05)": 1452,
+      "[0.05,0.25)": 2763,
+      "[0.25,0.50)": 1005,
+      "[0.50,0.75)": 333,
+      "[0.75,1.00]": 102
+    },
+    "clean_subset": {
+      "definition": "confidence >= 0.25 and IoU >= 0.75",
+      "detections": 334,
+      "also_overlap_same_predicted_class_gt_at_iou_0.5": 6,
+      "leading_counts": {
+        "truck->car": 78,
+        "bicycle->motorcycle": 55,
+        "motorcycle->car": 50,
+        "car->motorcycle": 25
+      }
+    },
+    "independent_pair_oracle_dAP": {
+      "truck->car": 3.352,
+      "bicycle->motorcycle": 2.346,
+      "bus->truck": 1.504,
+      "bus->car": 1.468
+    },
+    "independent_true_class_oracle_dAP": {
+      "truck": 4.454,
+      "bus": 3.042,
+      "bicycle": 2.952
+    },
+    "effective_960_shortest_side_oracle_dAP": {
+      "<8px": 1.352,
+      "8-16px": 4.235,
+      "16-32px": 5.153,
+      ">=32px": 2.53
+    }
+  },
+  "native_shortest_side": {
+    "<8px": {
+      "gt": 5074,
+      "unmatched_gt_pct": 59.91,
+      "irrecoverable_miss_pct": 33.35
+    },
+    "8-15px": {
+      "gt": 11861,
+      "unmatched_gt_pct": 29.11,
+      "irrecoverable_miss_pct": 14.81
+    },
+    "16-31px": {
+      "gt": 13414,
+      "unmatched_gt_pct": 15.28,
+      "irrecoverable_miss_pct": 7.24
+    },
+    ">=32px": {
+      "gt": 8410,
+      "unmatched_gt_pct": 5.52,
+      "irrecoverable_miss_pct": 1.63
+    }
+  },
+  "occlusion": {
+    "none": {
+      "gt": 16810,
+      "unmatched_gt_pct": 16.68,
+      "irrecoverable_miss_pct": 7.51,
+      "classification_associated_pct": 11.7,
+      "localization_associated_pct": 28.32
+    },
+    "partial": {
+      "gt": 18863,
+      "unmatched_gt_pct": 26.92,
+      "irrecoverable_miss_pct": 14.18,
+      "classification_associated_pct": 12.12,
+      "localization_associated_pct": 39.13
+    },
+    "heavy": {
+      "gt": 3086,
+      "unmatched_gt_pct": 36.45,
+      "irrecoverable_miss_pct": 20.09,
+      "classification_associated_pct": 11.34,
+      "localization_associated_pct": 45.43
+    }
+  },
+  "ignored_source_metadata": {
+    "ignored_region_rows_omitted_from_derived_gt": 1378,
+    "others_rows_omitted_from_derived_gt": 32,
+    "background_detections_total": 66083,
+    "background_detections_over_50pct_covered": 11700,
+    "at_confidence_0.25": {
+      "background_detections": 3473,
+      "over_50pct_covered": 1364,
+      "covered_pct": 39.27
+    },
+    "interpretation": "candidate evaluation contamination for Bkg/FP; not a correction to AP and not a cause of strict Cls errors"
+  },
+  "caveats": [
+    "TIDE dAP is oracle AP opportunity, not a count or percentage of boxes.",
+    "Main error dAP values are independently fixed and are not additive.",
+    "Raw counts depend on the 0.001 confidence floor, max_det=300, IoU thresholds, and TIDE error ordering.",
+    "Original source annotations are external to the repository; their deterministic manifest hash is recorded above."
+  ]
+}

@@ -12,8 +12,9 @@ from collections import defaultdict
 from pathlib import Path
 
 from . import paths
-from .data_coco import build_gt
-from .expmeta import load_config, load_protocol
+from .data_coco import build_gt, gt_fingerprint
+from .expmeta import (effective_protocol_hash, inference_identity, load_config,
+                      load_protocol, protocol_hash, protocol_overrides)
 
 TB, TF = 0.1, 0.5  # TIDE background / foreground IoU thresholds
 
@@ -125,7 +126,9 @@ def run_tide(exp_ref: str, seed: int | None = None) -> None:
     exp_dir = paths.resolve_exp(exp_ref)
     cfg = load_config(exp_dir)
     dataset = cfg["meta"]["dataset"]
-    split = load_protocol()["split"]
+    overrides = protocol_overrides(cfg)
+    proto = load_protocol(overrides)
+    split = proto["split"]
     gt_json = build_gt(dataset, split)
 
     preds = sorted(exp_dir.glob(f"artifacts/predictions_{split}_s*.json"))
@@ -134,9 +137,16 @@ def run_tide(exp_ref: str, seed: int | None = None) -> None:
     if not preds:
         raise SystemExit(f"{exp_dir.name}: no predictions for split '{split}' — run eval first")
     dets_json = preds[0]
+    metrics_path = exp_dir / "seeds" / f"s{seed}" / "metrics.json" if seed is not None else None
+    metrics = json.loads(metrics_path.read_text()) if metrics_path and metrics_path.exists() else None
+    expected_hash = effective_protocol_hash(cfg)
+    if metrics and metrics.get("protocol", {}).get("hash") != expected_hash:
+        raise SystemExit(
+            f"{exp_dir.name}: predictions/metrics use a stale protocol — run eval again"
+        )
 
     try:
-        report = _run_tidecv(gt_json, dets_json, load_protocol()["max_det"])
+        report = _run_tidecv(gt_json, dets_json, proto["max_det"])
     except Exception as e:  # stale tidecv is a known risk — fall back, don't die
         print(f"tidecv failed ({type(e).__name__}: {e}); using greedy-count fallback")
         report = _fallback_counts(gt_json, dets_json)
@@ -147,8 +157,22 @@ def run_tide(exp_ref: str, seed: int | None = None) -> None:
 
     report["dataset"] = dataset
     report["split"] = split
+    report["protocol"] = {
+        "hash": expected_hash,
+        "base_hash": protocol_hash(),
+        "overrides": overrides,
+        "gt": gt_fingerprint(dataset, split),
+        "imgsz": proto["imgsz"],
+        "conf": proto["conf"],
+        "iou": proto["iou"],
+        "max_det": proto["max_det"],
+    }
+    if inference_identity(cfg):
+        report["protocol"]["inference"] = inference_identity(cfg)
     report["predictions"] = dets_json.name
     report["predictions_sha256"] = file_sha16(dets_json)
+    if metrics:
+        report["weights_sha256"] = metrics.get("model", {}).get("weights_sha256")
     out = exp_dir / "tide_report.json"
     out.write_text(json.dumps(report, indent=2) + "\n")
     print(f"wrote {out.relative_to(paths.ROOT)} (method={report['method']})")

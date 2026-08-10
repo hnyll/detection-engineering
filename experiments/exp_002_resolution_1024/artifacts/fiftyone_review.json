@@ -1,0 +1,42 @@
+{
+  "dataset": "visdrone-val-7ada432f",
+  "eval_key": "eval_exp_002_resolution_1024_s17_6651f4d3",
+  "pred_field": "pred_exp_002_resolution_1024_s17_6651f4d3",
+  "predictions_sha256": "6651f4d342df9787",
+  "seed": 17,
+  "counts": {
+    "tp": 22793,
+    "fp": 127037,
+    "fn": 15966
+  },
+  "reviewed_failures": 98,
+  "label_tags": {
+    "tiny": 57,
+    "low-light": 11,
+    "blur": 8,
+    "reviewed": 159,
+    "occluded": 23,
+    "wrong class": 35,
+    "localization": 1,
+    "truncated": 1,
+    "crowded": 3,
+    "overlapping": 6,
+    "wrong pred": 1
+  },
+  "sample_tags": {},
+  "saved_views": [
+    "crowded",
+    "fp_exp_002_resolution_1024_s17",
+    "missed_exp_002_resolution_1024_s17",
+    "tiny_gt"
+  ],
+  "condition_tags_expected": [
+    "tiny",
+    "crowded",
+    "occluded",
+    "blur",
+    "low-light",
+    "truncation",
+    "reviewed"
+  ]
+}

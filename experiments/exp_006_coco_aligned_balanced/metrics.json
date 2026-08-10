@@ -1,0 +1,100 @@
+{
+  "protocol": {
+    "hash": "a9b8207b3cc7a070",
+    "dataset": "visdrone_exp006_coco_aligned",
+    "split": "val",
+    "gt": "e1142868d4dc2e9d",
+    "imgsz": 640,
+    "conf": 0.001,
+    "iou": 0.7,
+    "max_det": 300
+  },
+  "n_seeds": 1,
+  "aggregate": {
+    "map50_95_mean": 0.21767,
+    "map50_95_std": null,
+    "map50_mean": 0.37672,
+    "map50_std": null,
+    "map75_mean": 0.21391,
+    "map75_std": null,
+    "ap_small_mean": 0.11139,
+    "ap_small_std": null,
+    "ap_medium_mean": 0.32413,
+    "ap_medium_std": null,
+    "ap_large_mean": 0.51011,
+    "ap_large_std": null,
+    "latency_ms_mean_mean": 10.06,
+    "latency_ms_mean_std": null,
+    "fps_batch1_mean": 99.4,
+    "fps_batch1_std": null
+  },
+  "overall": {
+    "map50_95": 0.21767,
+    "map50": 0.37672,
+    "map75": 0.21391,
+    "ap_small": 0.11139,
+    "ap_medium": 0.32413,
+    "ap_large": 0.51011,
+    "ar_max": 0.29215
+  },
+  "per_class": {
+    "person": {
+      "ap50_95": 0.15158,
+      "ap50": 0.39833,
+      "ap50_95_std": null
+    },
+    "bicycle": {
+      "ap50_95": 0.0293,
+      "ap50": 0.06819,
+      "ap50_95_std": null
+    },
+    "car": {
+      "ap50_95": 0.51765,
+      "ap50": 0.78191,
+      "ap50_95_std": null
+    },
+    "truck": {
+      "ap50_95": 0.16199,
+      "ap50": 0.23856,
+      "ap50_95_std": null
+    },
+    "bus": {
+      "ap50_95": 0.29099,
+      "ap50": 0.41371,
+      "ap50_95_std": null
+    },
+    "motorcycle": {
+      "ap50_95": 0.15453,
+      "ap50": 0.3596,
+      "ap50_95_std": null
+    }
+  },
+  "speed": {
+    "latency_ms_mean": 10.06,
+    "latency_ms_p50": 9.69,
+    "latency_ms_p95": 11.3,
+    "fps_batch1": 99.4,
+    "device": "NVIDIA GeForce RTX 4060",
+    "n_timed": 100
+  },
+  "model": {
+    "params_m": 2.583,
+    "gflops": 6.32,
+    "weights": "/home/hnyll/detection-engineering/experiments/exp_006_coco_aligned_balanced/seeds/s17/weights/best.pt",
+    "weights_sha256": "eaed04c240d52e73"
+  },
+  "seeds": {
+    "s17": {
+      "map50_95": 0.21767,
+      "map50": 0.37672,
+      "ap_small": 0.11139,
+      "weights_sha256": "eaed04c240d52e73"
+    }
+  },
+  "env": {
+    "python": "3.10.12",
+    "torch": "2.9.1+cu128",
+    "ultralytics": "8.4.65",
+    "git_sha": "e10f4e5"
+  }
+}

@@ -1,0 +1,27 @@
+# Exp7 is inference-only. It reuses the exact Exp6 seed-17 checkpoint and
+# changes only prediction resolution; `make train` intentionally refuses it.
+meta:
+  name: "inference_960"
+  parent_exp: "exp_006_coco_aligned_balanced"
+  dataset: "visdrone_exp006_coco_aligned"
+  seeds: [17]
+  inference_only: true
+  causal_variable: "inference imgsz: 640 -> 960 with the same checkpoint"
+  compensating_changes: []
+
+evaluation:
+  protocol_overrides:
+    imgsz: 960
+  weights_from:
+    experiment: "exp_006_coco_aligned_balanced"
+    seed: 17
+    sha256: "eaed04c240d52e73"
+  expected_gt: "e1142868d4dc2e9d"
+
+# Retained only because the harness schema requires a train section. These
+# values document the inherited model; they are not executed for Exp7.
+train:
+  model: "yolo11n.pt"
+  imgsz: 640
+  epochs: 100
+  batch: 16

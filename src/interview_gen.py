@@ -63,8 +63,6 @@ def _dataset_facts(metrics: dict) -> dict:
 
 
 def generate(exp_ref: str | None = None, force: bool = False) -> None:
-    from .expmeta import protocol_hash
-
     if exp_ref:
         from .expmeta import stale_seeds
 
@@ -83,7 +81,8 @@ def generate(exp_ref: str | None = None, force: bool = False) -> None:
     if exp is None:
         raise SystemExit("no real (non-smoke) experiment with metrics.json yet — "
                          "run a VisDrone experiment first")
-    if metrics["protocol"]["hash"] != protocol_hash():
+    from .expmeta import effective_protocol_hash
+    if metrics["protocol"]["hash"] != effective_protocol_hash(load_config(exp)):
         print("WARNING: metrics predate the current protocol.yaml — numbers cited "
               "here are from the OLD protocol; consider re-running eval")
 

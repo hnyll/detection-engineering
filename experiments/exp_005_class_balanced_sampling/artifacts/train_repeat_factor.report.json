@@ -1,0 +1,112 @@
+{
+  "method": "repeat_factor_sampling",
+  "formula": "r(c)=max(1,sqrt(repeat_threshold/image_frequency(c)))",
+  "source_yaml": "configs/visdrone.yaml",
+  "dataset": "visdrone",
+  "split": "train",
+  "seed": 17,
+  "repeat_threshold": 0.8,
+  "max_repeat": 3,
+  "source_images": 6471,
+  "sampled_entries": 10095,
+  "expansion_ratio": 1.56004,
+  "copy_histogram": {
+    "1": 2981,
+    "2": 3356,
+    "3": 134
+  },
+  "manifest": "experiments/exp_005_class_balanced_sampling/artifacts/train_repeat_factor.txt",
+  "manifest_sha256": "85e48edbe5480c05",
+  "classes": {
+    "pedestrian": {
+      "id": 0,
+      "source_images": 5366,
+      "source_image_frequency": 0.829238,
+      "source_instances": 79337,
+      "class_repeat_factor": 1.0,
+      "sampled_image_entries": 8555,
+      "sampled_instances": 129339
+    },
+    "people": {
+      "id": 1,
+      "source_images": 3947,
+      "source_image_frequency": 0.609952,
+      "source_instances": 27059,
+      "class_repeat_factor": 1.14524,
+      "sampled_image_entries": 6550,
+      "sampled_instances": 47409
+    },
+    "bicycle": {
+      "id": 2,
+      "source_images": 2755,
+      "source_image_frequency": 0.425746,
+      "source_instances": 10480,
+      "class_repeat_factor": 1.37079,
+      "sampled_image_entries": 4716,
+      "sampled_instances": 17937
+    },
+    "car": {
+      "id": 3,
+      "source_images": 6133,
+      "source_image_frequency": 0.947767,
+      "source_instances": 144866,
+      "class_repeat_factor": 1.0,
+      "sampled_image_entries": 9659,
+      "sampled_instances": 234086
+    },
+    "van": {
+      "id": 4,
+      "source_images": 4948,
+      "source_image_frequency": 0.764642,
+      "source_instances": 24956,
+      "class_repeat_factor": 1.02286,
+      "sampled_image_entries": 7925,
+      "sampled_instances": 41092
+    },
+    "truck": {
+      "id": 5,
+      "source_images": 3551,
+      "source_image_frequency": 0.548756,
+      "source_instances": 12875,
+      "class_repeat_factor": 1.20741,
+      "sampled_image_entries": 5820,
+      "sampled_instances": 21353
+    },
+    "tricycle": {
+      "id": 6,
+      "source_images": 1688,
+      "source_image_frequency": 0.260856,
+      "source_instances": 4812,
+      "class_repeat_factor": 1.75124,
+      "sampled_image_entries": 3195,
+      "sampled_instances": 9331
+    },
+    "awning-tricycle": {
+      "id": 7,
+      "source_images": 1151,
+      "source_image_frequency": 0.17787,
+      "source_instances": 3246,
+      "class_repeat_factor": 2.12077,
+      "sampled_image_entries": 2436,
+      "sampled_instances": 6848
+    },
+    "bus": {
+      "id": 8,
+      "source_images": 2023,
+      "source_image_frequency": 0.312626,
+      "source_instances": 5926,
+      "class_repeat_factor": 1.59968,
+      "sampled_image_entries": 3407,
+      "sampled_instances": 9930
+    },
+    "motor": {
+      "id": 9,
+      "source_images": 4237,
+      "source_image_frequency": 0.654767,
+      "source_instances": 29647,
+      "class_repeat_factor": 1.10535,
+      "sampled_image_entries": 6981,
+      "sampled_instances": 52683
+    }
+  }
+}

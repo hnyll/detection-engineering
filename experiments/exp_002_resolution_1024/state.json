@@ -1,0 +1,112 @@
+{
+  "runs": [
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_002_resolution_1024_s17",
+      "status": "interrupted",
+      "planned_interrupt": false,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "msjsqg89",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4163,
+        "max_child": 721
+      },
+      "timestamp": "2026-08-03T14:57:44+00:00"
+    },
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_002_resolution_1024_s17",
+      "status": "interrupted",
+      "planned_interrupt": false,
+      "resumed_from": {
+        "path": "/home/hnyll/detection-engineering/runs/exp_002_resolution_1024_s17/weights/last.pt",
+        "sha256": "ea5fbfa258ba047a"
+      },
+      "wandb_mode": "online",
+      "wandb_id": "m484qul5",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3491,
+        "max_child": 728
+      },
+      "timestamp": "2026-08-04T02:09:32+00:00"
+    },
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_002_resolution_1024_s17",
+      "status": "completed",
+      "planned_interrupt": null,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "46lrff4x",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3743,
+        "max_child": 3743
+      },
+      "timestamp": "2026-08-04T07:10:44+00:00"
+    },
+    {
+      "seed": 42,
+      "run_dir": "runs/exp_002_resolution_1024_s42",
+      "status": "interrupted",
+      "planned_interrupt": false,
+      "resumed_from": null,
+      "wandb_mode": "disabled",
+      "wandb_id": null,
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3681,
+        "max_child": 720
+      },
+      "timestamp": "2026-08-05T12:24:08+00:00"
+    },
+    {
+      "seed": 42,
+      "run_dir": "runs/exp_002_resolution_1024_s42",
+      "status": "interrupted",
+      "planned_interrupt": false,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "6ixng5w3",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3576,
+        "max_child": 722
+      },
+      "timestamp": "2026-08-05T12:26:53+00:00"
+    },
+    {
+      "seed": 42,
+      "run_dir": "runs/exp_002_resolution_1024_s42",
+      "status": "completed",
+      "planned_interrupt": null,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "1i9134rp",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3801,
+        "max_child": 3801
+      },
+      "timestamp": "2026-08-05T17:25:00+00:00"
+    },
+    {
+      "seed": 1337,
+      "run_dir": "runs/exp_002_resolution_1024_s1337",
+      "status": "completed",
+      "planned_interrupt": null,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "fqvgrs5r",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3713,
+        "max_child": 3713
+      },
+      "timestamp": "2026-08-05T22:26:19+00:00"
+    }
+  ]
+}

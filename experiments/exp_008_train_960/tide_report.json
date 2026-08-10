@@ -1,0 +1,34 @@
+{
+  "method": "tidecv",
+  "dAP": {
+    "Cls": 14.255,
+    "Loc": 4.863,
+    "Both": 0.626,
+    "Dupe": 0.62,
+    "Bkg": 2.824,
+    "Miss": 8.473
+  },
+  "special_dAP": {
+    "FalsePos": 13.975,
+    "FalseNeg": 25.556
+  },
+  "counts": null,
+  "notes": "dAP = AP gained by oracle-fixing that error type (TIDE paper definition)",
+  "dataset": "visdrone_exp006_coco_aligned",
+  "split": "val",
+  "protocol": {
+    "hash": "821306fe3a07ceac",
+    "base_hash": "a9b8207b3cc7a070",
+    "overrides": {
+      "imgsz": 960
+    },
+    "gt": "e1142868d4dc2e9d",
+    "imgsz": 960,
+    "conf": 0.001,
+    "iou": 0.7,
+    "max_det": 300
+  },
+  "predictions": "predictions_val_s17.json",
+  "predictions_sha256": "ffd266196e969365",
+  "weights_sha256": "e1a30d15043d5955"
+}

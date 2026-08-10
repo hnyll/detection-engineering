@@ -1,0 +1,34 @@
+{
+  "runs": [
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_004_p2_head_640_s17",
+      "status": "interrupted",
+      "planned_interrupt": false,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "vg3eixs4",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3527,
+        "max_child": 782
+      },
+      "timestamp": "2026-08-05T23:26:01+00:00"
+    },
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_004_p2_head_640_s17",
+      "status": "completed",
+      "planned_interrupt": null,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "mdlv8ur8",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3427,
+        "max_child": 3427
+      },
+      "timestamp": "2026-08-06T06:46:48+00:00"
+    }
+  ]
+}

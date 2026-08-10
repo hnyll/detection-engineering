@@ -1,0 +1,19 @@
+{
+  "runs": [
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_005_class_balanced_sampling_s17",
+      "status": "completed",
+      "planned_interrupt": null,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "oyznvcj2",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4243,
+        "max_child": 4243
+      },
+      "timestamp": "2026-08-06T15:53:49+00:00"
+    }
+  ]
+}

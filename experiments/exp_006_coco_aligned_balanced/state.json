@@ -1,0 +1,19 @@
+{
+  "runs": [
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_006_coco_aligned_balanced_s17",
+      "status": "completed",
+      "planned_interrupt": null,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "686w19l4",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4923,
+        "max_child": 4923
+      },
+      "timestamp": "2026-08-06T20:02:11+00:00"
+    }
+  ]
+}

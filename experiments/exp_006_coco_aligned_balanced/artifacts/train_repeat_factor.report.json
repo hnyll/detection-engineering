@@ -1,0 +1,75 @@
+{
+  "method": "repeat_factor_sampling",
+  "formula": "r(c)=max(1,sqrt(repeat_threshold/image_frequency(c)))",
+  "source_yaml": "configs/visdrone_exp006_coco_aligned.yaml",
+  "dataset": "visdrone_exp006_coco_aligned",
+  "split": "train",
+  "seed": 17,
+  "repeat_threshold": 0.8,
+  "max_repeat": 3,
+  "source_images": 6471,
+  "sampled_entries": 8716,
+  "expansion_ratio": 1.34693,
+  "copy_histogram": {
+    "1": 4226,
+    "2": 2245
+  },
+  "manifest": "experiments/exp_006_coco_aligned_balanced/artifacts/train_repeat_factor.txt",
+  "manifest_sha256": "2b3a16c59f595c3b",
+  "classes": {
+    "person": {
+      "id": 0,
+      "source_images": 5684,
+      "source_image_frequency": 0.87838,
+      "source_instances": 106396,
+      "class_repeat_factor": 1.0,
+      "sampled_image_entries": 7696,
+      "sampled_instances": 146233
+    },
+    "bicycle": {
+      "id": 1,
+      "source_images": 2755,
+      "source_image_frequency": 0.425746,
+      "source_instances": 10480,
+      "class_repeat_factor": 1.37079,
+      "sampled_image_entries": 3937,
+      "sampled_instances": 15083
+    },
+    "car": {
+      "id": 2,
+      "source_images": 6168,
+      "source_image_frequency": 0.953176,
+      "source_instances": 169822,
+      "class_repeat_factor": 1.0,
+      "sampled_image_entries": 8368,
+      "sampled_instances": 238952
+    },
+    "truck": {
+      "id": 3,
+      "source_images": 3551,
+      "source_image_frequency": 0.548756,
+      "source_instances": 12875,
+      "class_repeat_factor": 1.20741,
+      "sampled_image_entries": 5004,
+      "sampled_instances": 18367
+    },
+    "bus": {
+      "id": 4,
+      "source_images": 2023,
+      "source_image_frequency": 0.312626,
+      "source_instances": 5926,
+      "class_repeat_factor": 1.59968,
+      "sampled_image_entries": 3225,
+      "sampled_instances": 9505
+    },
+    "motorcycle": {
+      "id": 5,
+      "source_images": 4512,
+      "source_image_frequency": 0.697265,
+      "source_instances": 37705,
+      "class_repeat_factor": 1.07114,
+      "sampled_image_entries": 6158,
+      "sampled_instances": 51923
+    }
+  }
+}

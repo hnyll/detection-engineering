@@ -1,0 +1,37 @@
+{
+  "seed": 17,
+  "ultralytics_version": "8.4.65",
+  "cls_pw": 0.25,
+  "formula": "normalize_mean((1 / class_count) ** cls_pw)",
+  "data_yaml": "/home/hnyll/detection-engineering/configs/visdrone_exp006_coco_aligned_balanced.yaml",
+  "train_manifest": "/home/hnyll/detection-engineering/experiments/exp_006_coco_aligned_balanced/artifacts/train_repeat_factor.txt",
+  "train_manifest_sha256": "2b3a16c59f595c3bb51582b66849d9bc2dbebbce2eb0b5700edd292551ea74d3",
+  "training_entries": 8716,
+  "class_counts": {
+    "person": 146231,
+    "bicycle": 15083,
+    "car": 238949,
+    "truck": 18367,
+    "bus": 9505,
+    "motorcycle": 51922
+  },
+  "class_weights": {
+    "person": 0.6972892880439758,
+    "bicycle": 1.2304130792617798,
+    "car": 0.616732120513916,
+    "truck": 1.1712870597839355,
+    "bus": 1.380971908569336,
+    "motorcycle": 0.9033061861991882
+  },
+  "expected_class_weights": {
+    "person": 0.697288,
+    "bicycle": 1.230415,
+    "car": 0.616731,
+    "truck": 1.171289,
+    "bus": 1.380974,
+    "motorcycle": 0.903303
+  },
+  "zero_count_classes": [],
+  "max_abs_diff": 3.1861991882653484e-06,
+  "verified": true
+}

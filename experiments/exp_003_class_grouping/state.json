@@ -1,0 +1,34 @@
+{
+  "runs": [
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_003_class_grouping_s17",
+      "status": "interrupted",
+      "planned_interrupt": false,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "98ct3bq8",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4165,
+        "max_child": 722
+      },
+      "timestamp": "2026-08-04T14:36:10+00:00"
+    },
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_003_class_grouping_s17",
+      "status": "completed",
+      "planned_interrupt": null,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "80chld4y",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4121,
+        "max_child": 4121
+      },
+      "timestamp": "2026-08-04T16:45:15+00:00"
+    }
+  ]
+}

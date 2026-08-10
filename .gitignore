@@ -22,4 +22,7 @@ wandb/
 # metrics.json, tide_report.json, small plots) stays committed
 experiments/**/artifacts/predictions*
 experiments/**/artifacts/crops/
+experiments/**/artifacts/**/crops/
+experiments/**/artifacts/train_repeat_factor.txt
+experiments/**/artifacts/tile_manifest*
 experiments/**/seeds/*/weights/

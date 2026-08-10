@@ -1,0 +1,13 @@
+# Training-only repeat-factor view over Exp6's remapped labels. Evaluation uses
+# configs/visdrone_exp006_coco_aligned.yaml via meta.dataset.
+path: /home/hnyll/detection-engineering
+train: experiments/exp_006_coco_aligned_balanced/artifacts/train_repeat_factor.txt
+val: data/derived/visdrone_exp006_coco_aligned/images/val
+test: data/derived/visdrone_exp006_coco_aligned/images/test
+names:
+  0: person
+  1: bicycle
+  2: car
+  3: truck
+  4: bus
+  5: motorcycle

@@ -1,0 +1,16 @@
+# Experiment config. `meta` drives the harness; `train` is passed to Ultralytics
+# on top of machine-safe defaults (workers=2, amp=True, cache=False — see src/train.py).
+meta:
+  name: "resolution_1024"
+  parent_exp: "exp_001_baseline_640"
+  dataset: visdrone
+  seeds: [17, 42, 1337]
+  causal_variable: "training imgsz: 640 -> 1024 while fixed evaluation remains imgsz=640"
+  compensating_changes:
+    - "batch 8 -> 4 for RTX 4060 8 GB VRAM"
+
+train:
+  model: yolo11n.pt
+  imgsz: 1024
+  epochs: 100
+  batch: 4                   # explicit — never auto (-1) on the 8GB 4060

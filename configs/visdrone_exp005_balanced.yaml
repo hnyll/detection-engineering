@@ -1,0 +1,18 @@
+# Exp5 training-only view: repeat-factor manifest over the original VisDrone
+# train images. Evaluation remains on configs/visdrone.yaml via meta.dataset.
+path: /home/hnyll/detection-engineering
+train: experiments/exp_005_class_balanced_sampling/artifacts/train_repeat_factor.txt
+val: data/visdrone/images/val
+test: data/visdrone/images/test
+
+names:
+  0: pedestrian
+  1: people
+  2: bicycle
+  3: car
+  4: van
+  5: truck
+  6: tricycle
+  7: awning-tricycle
+  8: bus
+  9: motor

@@ -1,0 +1,16 @@
+# Exp5: one data-sampling change for the official ten-class VisDrone Task 1.
+meta:
+  name: "class_balanced_sampling"
+  parent_exp: "exp_001_baseline_640"
+  dataset: "visdrone"
+  train_dataset: "visdrone_exp005_balanced"
+  seeds: [17]
+  causal_variable: "repeat-factor image sampling for underrepresented classes"
+  compensating_changes:
+    - "training epoch contains repeated image entries; no image files are copied"
+
+train:
+  model: "yolo11n.pt"
+  imgsz: 640
+  epochs: 100
+  batch: 16

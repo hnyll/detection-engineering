@@ -1,0 +1,37 @@
+{
+  "runs": [
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_010_class_weighted_960_s17",
+      "status": "interrupted",
+      "planned_interrupt": false,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "lm9xdxrv",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 3670,
+        "max_child": 718
+      },
+      "timestamp": "2026-08-09T11:37:00+00:00"
+    },
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_010_class_weighted_960_s17",
+      "status": "completed",
+      "planned_interrupt": null,
+      "resumed_from": {
+        "path": "/home/hnyll/detection-engineering/runs/exp_010_class_weighted_960_s17/weights/last.pt",
+        "sha256": "dc5097a9254fb968"
+      },
+      "wandb_mode": "online",
+      "wandb_id": "thfc809g",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4069,
+        "max_child": 4069
+      },
+      "timestamp": "2026-08-10T01:01:55+00:00"
+    }
+  ]
+}

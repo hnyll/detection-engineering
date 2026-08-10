@@ -1,0 +1,13 @@
+# Generated-label view for Exp6. Build it with the first command in
+# experiments/exp_006_coco_aligned_balanced/command.sh.
+path: /home/hnyll/detection-engineering/data/derived/visdrone_exp006_coco_aligned
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: person
+  1: bicycle
+  2: car
+  3: truck
+  4: bus
+  5: motorcycle

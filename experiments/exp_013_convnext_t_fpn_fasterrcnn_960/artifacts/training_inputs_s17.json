@@ -1,0 +1,17 @@
+{
+  "seed": 17,
+  "checks": {
+    "initial_weights": {
+      "path": "/home/hnyll/.cache/torch/hub/checkpoints/convnext_tiny-983f1562.pth",
+      "expected_sha256": "983f1562536e84ff750a1576fb08e54de751dbf2e17c0d8a4a13704341fdcd3d",
+      "actual_sha256": "983f1562536e84ff750a1576fb08e54de751dbf2e17c0d8a4a13704341fdcd3d",
+      "match": true
+    },
+    "train_manifest": {
+      "path": "/home/hnyll/detection-engineering/experiments/exp_006_coco_aligned_balanced/artifacts/train_repeat_factor.txt",
+      "expected_sha256": "2b3a16c59f595c3bb51582b66849d9bc2dbebbce2eb0b5700edd292551ea74d3",
+      "actual_sha256": "2b3a16c59f595c3bb51582b66849d9bc2dbebbce2eb0b5700edd292551ea74d3",
+      "match": true
+    }
+  }
+}

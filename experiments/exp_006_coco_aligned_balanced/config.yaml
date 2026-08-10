@@ -1,0 +1,19 @@
+# Exp6 is a custom six-class application task, not official VisDrone Task 1.
+meta:
+  name: "coco_aligned_balanced"
+  parent_exp: "exp_005_class_balanced_sampling"
+  dataset: "visdrone_exp006_coco_aligned"
+  train_dataset: "visdrone_exp006_coco_aligned_balanced"
+  seeds: [17]
+  causal_variable: "COCO-aligned six-class taxonomy with repeat-factor sampling retained"
+  compensating_changes:
+    - "10 VisDrone classes become 6 approximate COCO concepts; metrics are a different task"
+    - "repeat factors are recomputed after class merging"
+  mapping_csv: "experiments/exp_006_coco_aligned_balanced/class_groups.csv"
+  source_dataset: "visdrone"
+
+train:
+  model: "yolo11n.pt"
+  imgsz: 640
+  epochs: 100
+  batch: 16

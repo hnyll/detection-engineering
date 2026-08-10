@@ -9,12 +9,14 @@ from __future__ import annotations
 import json
 import statistics
 import time
+from collections import Counter
 from pathlib import Path
 
 from . import paths
 from .data_coco import build_gt, class_names, image_dir, list_images
-from .expmeta import (append_command_sh, env_versions, file_sha16, load_config,
-                      load_protocol, protocol_hash)
+from .expmeta import (append_command_sh, effective_protocol_hash, env_versions,
+                      file_sha16, inference_identity, load_config, load_protocol,
+                      protocol_hash, protocol_overrides)
 
 AGG_KEYS = ("map50_95", "map50", "map75", "ap_small", "ap_medium", "ap_large",
             "latency_ms_mean", "fps_batch1")
@@ -32,17 +34,58 @@ def _seeds_with_weights(exp_dir: Path) -> list[int]:
     )
 
 
+def _evaluation_weights(exp_dir: Path, cfg: dict, seed: int) -> tuple[Path | None, dict | None]:
+    """Resolve local weights or an explicitly inherited evaluation checkpoint."""
+    local = _weights_for_seed(exp_dir, seed)
+    if local:
+        return local, None
+
+    spec = (cfg.get("evaluation") or {}).get("weights_from")
+    if not spec:
+        return None, None
+    if not isinstance(spec, dict) or not spec.get("experiment"):
+        raise SystemExit("evaluation.weights_from requires an experiment")
+    source_exp = paths.resolve_exp(str(spec["experiment"]))
+    source_seed = int(spec.get("seed", seed))
+    inherited = _weights_for_seed(source_exp, source_seed)
+    if not inherited:
+        raise SystemExit(
+            f"no inherited weights for {source_exp.name} seed {source_seed}"
+        )
+    expected_sha = spec.get("sha256")
+    if expected_sha and file_sha16(inherited) != str(expected_sha):
+        raise SystemExit(
+            f"inherited checkpoint changed: expected {expected_sha}, "
+            f"got {file_sha16(inherited)} — update the experiment hypothesis or restore the checkpoint"
+        )
+    return inherited, {"experiment": source_exp.name, "seed": source_seed}
+
+
 def predict_to_coco(model, dataset: str, split: str, proto: dict, out_json: Path) -> list[dict]:
     """Run the model over the split, write a COCO detections json (image order == GT ids)."""
     imgs = list_images(dataset, split)
     dets = []
+    # A Python list of paths is treated by Ultralytics as one in-memory image
+    # batch (LoadPilAndNumpy), regardless of stream=True. On VisDrone that tries
+    # to place all 548 validation images on the GPU together and OOMs larger
+    # architectures such as the P2-head model. A directory source uses
+    # LoadImagesAndVideos and honors batch=1 while retaining sorted filename
+    # order, which is also how build_gt assigns image ids. Keep rect=False
+    # explicit: the former mixed-shape mega-batch also used square letterboxing,
+    # and changing that here would invalidate comparisons with existing metrics.
     results = model.predict(
-        [str(p) for p in imgs],
+        str(image_dir(dataset, split)), batch=1, rect=False,
         imgsz=proto["imgsz"], conf=proto["conf"], iou=proto["iou"],
         max_det=proto["max_det"], device=proto["device"],
         stream=True, verbose=False,
     )
     for img_id, r in enumerate(results):
+        expected = imgs[img_id]
+        if Path(r.path).name != expected.name:
+            raise RuntimeError(
+                f"prediction order mismatch at image {img_id}: "
+                f"expected {expected.name}, got {Path(r.path).name}"
+            )
         for xyxy, score, cls in zip(
             r.boxes.xyxy.tolist(), r.boxes.conf.tolist(), r.boxes.cls.tolist()
         ):
@@ -137,18 +180,30 @@ def measure_speed(model, dataset: str, split: str, proto: dict) -> dict:
 
 
 def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) -> None:
-    from ultralytics import YOLO
-
     from .data_coco import gt_fingerprint
+    from .convnext_frcnn import is_convnext_frcnn
 
     exp_dir = paths.resolve_exp(exp_ref)
     cfg = load_config(exp_dir)
+    custom_family = is_convnext_frcnn(cfg)
+    if not custom_family:
+        from ultralytics import YOLO
     dataset = cfg["meta"]["dataset"]
-    proto = load_protocol()
+    overrides = protocol_overrides(cfg)
+    proto = load_protocol(overrides)
+    effective_hash = effective_protocol_hash(cfg)
+    identity_extra = inference_identity(cfg)
+    from .sliced_inference import normalized_tiling
+    tiling = normalized_tiling(cfg, proto)
     split = proto["split"]
     names = class_names(dataset)
     gt_json = build_gt(dataset, split)
     gt_fp = gt_fingerprint(dataset, split)
+    expected_gt = (cfg.get("evaluation") or {}).get("expected_gt")
+    if expected_gt and gt_fp != str(expected_gt):
+        raise SystemExit(
+            f"evaluation ground truth changed: expected {expected_gt}, got {gt_fp}"
+        )
 
     argv = ["eval", exp_dir.name]
     if seed is not None:
@@ -157,21 +212,25 @@ def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) 
         argv += ["--weights", str(weights)]
     append_command_sh(exp_dir, argv)
 
-    # (seed_label, weights_path, is_custom): ad-hoc weights never masquerade as a
-    # trained seed — their metrics go to artifacts/, not seeds/, and are not aggregated
+    # (seed_label, weights_path, is_custom, inherited_source): ad-hoc weights
+    # never masquerade as a trained seed. Explicit inherited weights are a
+    # reproducible inference-only experiment and retain their declared seed.
     if weights:
-        entries = [("custom", Path(weights), True)]
+        entries = [("custom", Path(weights), True, None)]
     elif seed is not None:
-        w = _weights_for_seed(exp_dir, seed)
+        w, source = _evaluation_weights(exp_dir, cfg, seed)
         if not w:
             raise SystemExit(f"no weights for seed {seed} — train first")
-        entries = [(seed, w, False)]
+        entries = [(seed, w, False, source)]
     else:
         # config-declared seeds only — a lingering seed dir from another
         # experiment iteration must not silently join the aggregate
         cfg_seeds = cfg["meta"]["seeds"]
-        entries = [(s, _weights_for_seed(exp_dir, s), False)
-                   for s in cfg_seeds if _weights_for_seed(exp_dir, s)]
+        entries = []
+        for s in cfg_seeds:
+            w, source = _evaluation_weights(exp_dir, cfg, s)
+            if w:
+                entries.append((s, w, False, source))
         extra = [s for s in _seeds_with_weights(exp_dir) if s not in cfg_seeds]
         if extra:
             print(f"ignoring seed dirs not declared in config.yaml: {extra} "
@@ -179,35 +238,129 @@ def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) 
         if not entries:
             raise SystemExit(f"{exp_dir.name}: no trained config seeds found — train first")
 
-    for s, w, custom in entries:
+    for s, w, custom, inherited_source in entries:
         print(f"== eval {exp_dir.name} seed {s} ({w})")
-        model = YOLO(str(w))
+        if inherited_source:
+            print(
+                "   inherited checkpoint from "
+                f"{inherited_source['experiment']} seed {inherited_source['seed']}"
+            )
         tag = f"custom_{w.stem}" if custom else f"s{s}"
         dets_json = exp_dir / "artifacts" / f"predictions_{split}_{tag}.json"
-        dets = predict_to_coco(model, dataset, split, proto, dets_json)
+        tiled_diagnostics = None
+        evaluation_artifacts = {}
+        if tiling:
+            if custom_family:
+                raise SystemExit("tiled inference is not implemented for ConvNeXt/Faster R-CNN")
+            model = YOLO(str(w))
+            from .sliced_inference import (full_frame_parity_suite, measure_tiled_speed,
+                                           native_size_recall, predict_to_coco_tiled)
+            print(
+                "   tiled inference: "
+                f"{tiling['tile_width']}x{tiling['tile_height']} source tiles, "
+                f"overlap={tiling['overlap_width_ratio']:.2f}/"
+                f"{tiling['overlap_height_ratio']:.2f}, global max_det={tiling['global_max_det']}"
+            )
+            manifest_json = exp_dir / "artifacts" / f"tile_manifest_{split}_{tag}.json"
+            tiled_diag_json = exp_dir / "artifacts" / f"tiled_diagnostics_{split}_{tag}.json"
+            parity_json = exp_dir / "artifacts" / f"control_parity_{split}_{tag}.json"
+            parity = full_frame_parity_suite(model, list_images(dataset, split), proto, tiling)
+            parity_json.write_text(json.dumps(parity, indent=2) + "\n")
+            print(
+                f"   full-frame parity PASS on {len(parity['cases'])} native shapes"
+            )
+            dets, tiled_diagnostics = predict_to_coco_tiled(
+                model, dataset, split, proto, tiling, dets_json,
+                manifest_json, tiled_diag_json,
+            )
+            tiled_diagnostics["native_size_recall"] = native_size_recall(gt_json, dets)
+            tiled_diag_json.write_text(json.dumps(tiled_diagnostics, indent=2) + "\n")
+            speed = measure_tiled_speed(model, dataset, split, proto, tiling)
+            evaluation_artifacts.update({
+                "control_parity": {"file": parity_json.name, "sha256": file_sha16(parity_json)},
+                "tile_manifest": {"file": manifest_json.name, "sha256": file_sha16(manifest_json)},
+                "tiled_diagnostics": {"file": tiled_diag_json.name, "sha256": file_sha16(tiled_diag_json)},
+            })
+        elif custom_family:
+            from .convnext_frcnn import (measure_speed as measure_convnext_speed,
+                                         predict_to_coco_checkpoint, validate_config)
+            model, dets = predict_to_coco_checkpoint(
+                cfg, w, dataset, split, dets_json
+            )
+            speed = measure_convnext_speed(
+                model, dataset, split, proto, amp=validate_config(cfg)["amp"]
+            )
+            print(
+                f"wrote {len(dets)} detections over {len(list_images(dataset, split))} "
+                f"images -> {dets_json.name}"
+            )
+        else:
+            model = YOLO(str(w))
+            dets = predict_to_coco(model, dataset, split, proto, dets_json)
+            speed = measure_speed(model, dataset, split, proto)
+        evaluation_artifacts["predictions"] = {
+            "file": dets_json.name,
+            "sha256": file_sha16(dets_json),
+        }
+        evaluation_artifacts["experiment_config"] = {
+            "file": "config.yaml",
+            "sha256": file_sha16(exp_dir / "config.yaml"),
+        }
         acc = coco_metrics(gt_json, dets, proto["max_det"], names)
-        speed = measure_speed(model, dataset, split, proto)
+        prediction_counts = Counter(d["image_id"] for d in dets)
+        n_images = len(list_images(dataset, split))
+        saturation = sum(n >= proto["max_det"] for n in prediction_counts.values())
         # model.info(verbose=False) returns None in this ultralytics version —
         # compute directly; None (not 0) on failure so gates flag it as missing
-        try:
-            from ultralytics.utils.torch_utils import get_flops, get_num_params
-            n_p = get_num_params(model.model)
-            flops = get_flops(model.model, proto["imgsz"])
-        except Exception:
-            n_p, flops = None, None
+        if custom_family:
+            from .convnext_frcnn import model_parameter_count
+            n_p, flops = model_parameter_count(model), None
+        else:
+            try:
+                from ultralytics.utils.torch_utils import get_flops, get_num_params
+                n_p = get_num_params(model.model)
+                flops = get_flops(model.model, proto["imgsz"])
+            except Exception:
+                n_p, flops = None, None
+        protocol_record = {"hash": effective_hash,
+                           "base_hash": protocol_hash(), "overrides": overrides,
+                           "dataset": dataset, "split": split,
+                           "gt": gt_fp, "imgsz": proto["imgsz"], "conf": proto["conf"],
+                           "iou": proto["iou"], "max_det": proto["max_det"]}
+        if identity_extra:
+            protocol_record["inference"] = identity_extra
+        diagnostics = {
+            "images": n_images,
+            "images_at_max_det": saturation,
+            "pct_images_at_max_det": round(100 * saturation / n_images, 2),
+        }
+        if tiled_diagnostics:
+            diagnostics["tiled"] = tiled_diagnostics
+        model_record = {"params_m": round(n_p / 1e6, 3) if n_p else None,
+                        "gflops": round(float(flops), 2) if flops else None,
+                        "family": ((cfg.get("meta") or {}).get("model_family")
+                                   or "ultralytics_yolo"),
+                        "weights": str(w),
+                        "weights_sha256": file_sha16(w),
+                        "weights_source": inherited_source}
+        if tiled_diagnostics and flops:
+            model_record["gflops_per_forward"] = round(float(flops), 2)
+            model_record["mean_forwards_per_image"] = tiled_diagnostics[
+                "model_forwards_per_image_mean"
+            ]
+            model_record["estimated_pipeline_gflops_mean"] = round(
+                float(flops) * tiled_diagnostics["model_forwards_per_image_mean"], 2
+            )
         seed_metrics = {
-            "protocol": {"hash": protocol_hash(), "dataset": dataset, "split": split,
-                         "gt": gt_fp, "imgsz": proto["imgsz"], "conf": proto["conf"],
-                         "iou": proto["iou"], "max_det": proto["max_det"]},
+            "protocol": protocol_record,
             "seed": None if custom else s,
             "custom_weights": str(w) if custom else None,
             "overall": acc["overall"],
             "per_class": acc["per_class"],
+            "diagnostics": diagnostics,
+            "artifacts": evaluation_artifacts,
             "speed": speed,
-            "model": {"params_m": round(n_p / 1e6, 3) if n_p else None,
-                      "gflops": round(float(flops), 2) if flops else None,
-                      "weights": str(w),
-                      "weights_sha256": file_sha16(w)},
+            "model": model_record,
             "env": env_versions(),
         }
         if custom:
@@ -223,26 +376,31 @@ def evaluate(exp_ref: str, seed: int | None = None, weights: str | None = None) 
         from .train import _free_gpu
         _free_gpu()
 
-    if not any(custom for _, _, custom in entries):
+    if not any(custom for _, _, custom, _ in entries):
         aggregate_exp(exp_dir)
 
 
 def aggregate_exp(exp_dir: Path) -> None:
     """Merge per-seed metrics (same protocol hash) into experiment-level metrics.json."""
-    allowed = {f"s{s}" for s in load_config(exp_dir)["meta"]["seeds"]}
+    cfg = load_config(exp_dir)
+    expected_protocol_hash = effective_protocol_hash(cfg)
+    allowed = {f"s{s}" for s in cfg["meta"]["seeds"]}
     per_seed, newest = {}, None
     skipped_cfg, skipped_stale = [], []
     for mj in sorted(exp_dir.glob("seeds/s*/metrics.json")):
         m = json.loads(mj.read_text())
         sk = f"s{m['seed']}"
-        if m["protocol"]["hash"] != protocol_hash():
+        if m["protocol"]["hash"] != expected_protocol_hash:
             continue
         if sk not in allowed:
             skipped_cfg.append(sk)
             continue
         # metrics for a since-retrained checkpoint describe a dead model
         recorded = m["model"].get("weights_sha256")
-        w = exp_dir / "seeds" / sk / "weights" / "best.pt"
+        recorded_path = m.get("model", {}).get("weights")
+        w = Path(recorded_path) if recorded_path else (
+            exp_dir / "seeds" / sk / "weights" / "best.pt"
+        )
         if recorded and w.exists() and file_sha16(w) != recorded:
             skipped_stale.append(sk)
             continue
@@ -299,12 +457,15 @@ def aggregate_exp(exp_dir: Path) -> None:
         "aggregate": aggregate,
         "overall": first["overall"] if len(per_seed) == 1 else None,
         "per_class": per_class,
+        "diagnostics": first.get("diagnostics"),
+        "artifacts": first.get("artifacts"),
         "speed": first["speed"],
         "model": first["model"],
         "seeds": {k: {"map50_95": v["overall"]["map50_95"],
                       "map50": v["overall"]["map50"],
                       "ap_small": v["overall"]["ap_small"],
-                      "weights_sha256": v["model"].get("weights_sha256")}
+                      "weights_sha256": v["model"].get("weights_sha256"),
+                      "weights": v["model"].get("weights")}
                   for k, v in per_seed.items()},
         "env": first["env"],
     }

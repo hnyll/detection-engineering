@@ -1,0 +1,15 @@
+{
+  "experiment": "exp_012_hybrid_fullframe_tiles_640",
+  "status": "frozen_before_evaluation",
+  "hypothesis_sha256": "8c77cec8604dd50fe31b794db2b6bd5cbf6ec75b4ef96b22875fad4db9914889",
+  "config_sha256": "6bf7e0f48232af898f2ec72be3e0bb410cb1a8f4889afdadf5fee32d6a34b912",
+  "tiling_source_sha256": "eff17e3fed47ac67ac18362fdb2d054e565c08618c80a0c7558701aa903efd17",
+  "expected_protocol_hash": "051e7ff3d9dcb3e0",
+  "control": {
+    "experiment": "exp_011_tiled_inference_640",
+    "protocol_hash": "feddb3567d439c3a",
+    "predictions_sha256": "2e324ed84dc1325f8bf21d494d22e04dd85687ed903410c691b7c1900cde7ce0"
+  },
+  "checkpoint_sha256_short": "d078cf0e25577202",
+  "ground_truth_fingerprint": "e1142868d4dc2e9d"
+}

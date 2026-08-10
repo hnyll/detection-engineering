@@ -1,0 +1,19 @@
+{
+  "runs": [
+    {
+      "seed": 17,
+      "run_dir": "runs/exp_008_train_960_s17",
+      "status": "completed",
+      "planned_interrupt": null,
+      "resumed_from": null,
+      "wandb_mode": "online",
+      "wandb_id": "tp6vps9a",
+      "wandb_runs": [],
+      "peak_rss_mb": {
+        "self": 4058,
+        "max_child": 4058
+      },
+      "timestamp": "2026-08-08T10:02:11+00:00"
+    }
+  ]
+}

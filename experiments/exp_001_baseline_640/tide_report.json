@@ -1,21 +1,21 @@
 {
   "method": "tidecv",
   "dAP": {
-    "Cls": 23.364,
-    "Loc": 4.296,
-    "Both": 0.619,
-    "Dupe": 0.454,
-    "Bkg": 1.721,
-    "Miss": 8.589
+    "Cls": 23.065,
+    "Loc": 4.648,
+    "Both": 0.656,
+    "Dupe": 0.392,
+    "Bkg": 1.75,
+    "Miss": 8.359
   },
   "special_dAP": {
-    "FalsePos": 13.615,
-    "FalseNeg": 32.958
+    "FalsePos": 14.061,
+    "FalseNeg": 32.172
   },
   "counts": null,
   "notes": "dAP = AP gained by oracle-fixing that error type (TIDE paper definition)",
   "dataset": "visdrone",
   "split": "val",
-  "predictions": "predictions_val_s1337.json",
-  "predictions_sha256": "574338fbadef4c3b"
+  "predictions": "predictions_val_s17.json",
+  "predictions_sha256": "20da457699a421e7"
 }

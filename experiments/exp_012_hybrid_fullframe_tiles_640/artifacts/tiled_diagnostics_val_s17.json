@@ -1,0 +1,95 @@
+{
+  "mode": "tiled",
+  "tiling": {
+    "enabled": true,
+    "schema_version": 2,
+    "implementation": "sahi.get_slice_bboxes+torchvision.batched_nms",
+    "implementation_sha256": "eff17e3fed47ac67",
+    "dependencies": {
+      "sahi": "0.11.20",
+      "torchvision": "0.24.1+cu128",
+      "opencv": "4.10.0.84"
+    },
+    "tile_height": 640,
+    "tile_width": 640,
+    "overlap_height_ratio": 0.2,
+    "overlap_width_ratio": 0.2,
+    "include_full_image": true,
+    "tile_batch": 1,
+    "per_tile_conf": 0.001,
+    "per_tile_nms_iou": 0.7,
+    "per_tile_max_det": 300,
+    "merge": "class_aware_nms",
+    "merge_iou": 0.7,
+    "global_max_det": 300
+  },
+  "images": 548,
+  "total_tiles": 2842,
+  "tiles_per_image_mean": 5.186,
+  "tiles_per_image_min": 2,
+  "tiles_per_image_max": 8,
+  "model_forwards": 3390,
+  "model_forwards_per_image_mean": 6.186,
+  "full_frame_views": 548,
+  "full_frame_candidates": 153153,
+  "full_frame_views_at_local_max_det": 466,
+  "full_frame_views_at_local_max_det_conf_010": 18,
+  "full_frame_views_at_local_max_det_conf_025": 1,
+  "full_frame_rank_max_score_median": 0.01016,
+  "final_tile_detections": 115235,
+  "final_full_frame_detections": 48673,
+  "images_with_full_frame_survivor": 548,
+  "pre_merge_detections": 893336,
+  "post_merge_detections": 573967,
+  "final_detections": 163908,
+  "border_candidates": 141580,
+  "rejected_invalid_candidates": 8,
+  "invalid_final_boxes": 0,
+  "tiles_at_local_max_det": 1985,
+  "pct_tiles_at_local_max_det": 69.85,
+  "tiles_at_local_max_det_conf_010": 34,
+  "tiles_at_local_max_det_conf_025": 0,
+  "local_rank_max_score_median": 0.00504,
+  "images_at_global_max_det": 544,
+  "pct_images_at_global_max_det": 99.27,
+  "images_at_global_max_det_conf_010": 118,
+  "images_at_global_max_det_conf_025": 14,
+  "rank_max_score_median": 0.04531,
+  "tile_layout_sha256": "79e86ef06d0c9009",
+  "native_size_recall": {
+    "definition": "native-source GT shortest side; same-class score-greedy IoU match",
+    "iou_threshold": 0.5,
+    "overall": {
+      "gt": 38759,
+      "matched": 32715,
+      "unmatched": 6044,
+      "recall": 0.84406
+    },
+    "by_native_short_side": {
+      "lt8": {
+        "gt": 5074,
+        "matched": 3202,
+        "unmatched": 1872,
+        "recall": 0.63106
+      },
+      "8_to_15": {
+        "gt": 11861,
+        "matched": 9694,
+        "unmatched": 2167,
+        "recall": 0.8173
+      },
+      "16_to_31": {
+        "gt": 13414,
+        "matched": 11835,
+        "unmatched": 1579,
+        "recall": 0.88229
+      },
+      "ge32": {
+        "gt": 8410,
+        "matched": 7984,
+        "unmatched": 426,
+        "recall": 0.94935
+      }
+    }
+  }
+}

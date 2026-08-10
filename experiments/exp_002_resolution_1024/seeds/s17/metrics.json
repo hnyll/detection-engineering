@@ -1,0 +1,85 @@
+{
+  "protocol": {
+    "hash": "a9b8207b3cc7a070",
+    "dataset": "visdrone",
+    "split": "val",
+    "gt": "7ada432ff36fe090",
+    "imgsz": 640,
+    "conf": 0.001,
+    "iou": 0.7,
+    "max_det": 300
+  },
+  "seed": 17,
+  "custom_weights": null,
+  "overall": {
+    "map50_95": 0.17504,
+    "map50": 0.30017,
+    "map75": 0.17311,
+    "ap_small": 0.08266,
+    "ap_medium": 0.28204,
+    "ap_large": 0.52818,
+    "ar_max": 0.25317
+  },
+  "per_class": {
+    "pedestrian": {
+      "ap50_95": 0.14309,
+      "ap50": 0.33351
+    },
+    "people": {
+      "ap50_95": 0.09042,
+      "ap50": 0.24175
+    },
+    "bicycle": {
+      "ap50_95": 0.03572,
+      "ap50": 0.07652
+    },
+    "car": {
+      "ap50_95": 0.48685,
+      "ap50": 0.73382
+    },
+    "van": {
+      "ap50_95": 0.19825,
+      "ap50": 0.27184
+    },
+    "truck": {
+      "ap50_95": 0.18904,
+      "ap50": 0.27706
+    },
+    "tricycle": {
+      "ap50_95": 0.10557,
+      "ap50": 0.18952
+    },
+    "awning-tricycle": {
+      "ap50_95": 0.05424,
+      "ap50": 0.08431
+    },
+    "bus": {
+      "ap50_95": 0.293,
+      "ap50": 0.42184
+    },
+    "motor": {
+      "ap50_95": 0.15421,
+      "ap50": 0.3715
+    }
+  },
+  "speed": {
+    "latency_ms_mean": 11.42,
+    "latency_ms_p50": 9.22,
+    "latency_ms_p95": 27.98,
+    "fps_batch1": 87.6,
+    "device": "NVIDIA GeForce RTX 4060",
+    "n_timed": 100
+  },
+  "model": {
+    "params_m": 2.584,
+    "gflops": 6.32,
+    "weights": "/home/hnyll/detection-engineering/experiments/exp_002_resolution_1024/seeds/s17/weights/best.pt",
+    "weights_sha256": "bc77e5b009048346"
+  },
+  "env": {
+    "python": "3.10.12",
+    "torch": "2.9.1+cu128",
+    "ultralytics": "8.4.65",
+    "git_sha": "e10f4e5"
+  }
+}

@@ -1,0 +1,52 @@
+# Exp13 is the first non-Ultralytics detector-family screen. It uses a pure
+# convolutional ConvNeXt-Tiny backbone, a P2-P6 FPN, an RPN, and standard
+# Faster R-CNN RoI classification/regression heads.
+meta:
+  name: "convnext_t_fpn_fasterrcnn_960"
+  parent_exp: "exp_008_train_960"
+  dataset: "visdrone_exp006_coco_aligned"
+  train_dataset: "visdrone_exp006_coco_aligned_balanced"
+  model_family: "torchvision_fasterrcnn_convnext"
+  seeds: [17]
+  causal_variable: "model system: YOLO11n dense one-stage detector -> ConvNeXt-Tiny FPN two-stage detector"
+  compensating_changes:
+    - "native-aspect max-side-960 torchvision preprocessing replaces square YOLO letterboxing"
+    - "Faster R-CNN RPN, RoIAlign, losses, optimizer, and 24-epoch schedule replace the Ultralytics recipe"
+    - "physical batch 1 with four-step gradient accumulation is required by the 8 GB GPU"
+    - "horizontal flip is the only pixel augmentation; YOLO HSV, scale, translate, and mosaic are absent"
+  initial_weights_sha256: "983f1562536e84ff750a1576fb08e54de751dbf2e17c0d8a4a13704341fdcd3d"
+  train_manifest_sha256: "2b3a16c59f595c3bb51582b66849d9bc2dbebbce2eb0b5700edd292551ea74d3"
+
+evaluation:
+  protocol_overrides:
+    imgsz: 960
+  expected_gt: "e1142868d4dc2e9d"
+  model_pipeline:
+    schema_version: 1
+    family: "torchvision_fasterrcnn_convnext"
+    implementation: "torchvision==0.24.1"
+    resize: "preserve aspect ratio; long side capped at 960; stride-32 batch padding"
+    proposals: "RPN P2-P6; anchors 8,16,32,64,128; aspect ratios 0.5,1.0,2.0"
+    roi: "MultiScaleRoIAlign 7x7; standard two-MLP classification and box head"
+    score_floor: 0.001
+    class_aware_nms_iou: 0.70
+    max_detections: 300
+
+train:
+  model: "convnext_tiny"
+  architecture: "convnext_tiny_fpn_fasterrcnn"
+  pretrained: true
+  imgsz: 960
+  epochs: 24
+  batch: 1
+  accumulate: 4
+  workers: 2
+  amp: true
+  optimizer: "AdamW"
+  lr: 0.0001
+  weight_decay: 0.05
+  horizontal_flip: 0.5
+  anchor_sizes: [8, 16, 32, 64, 128]
+  score_thresh: 0.001
+  nms_iou: 0.70
+  max_det: 300

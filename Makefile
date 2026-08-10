@@ -1,6 +1,6 @@
 CLI := uv run python -m src.cli
 
-.PHONY: setup data doctor new train eval tide review compare export parity bench gates interview phase0 publish
+.PHONY: setup data doctor new train model-smoke eval tide threshold-sweep review compare export parity bench gates interview phase0 publish
 
 setup:            ## bootstrap uv + .venv from lockfile
 	bash scripts/setup_env.sh
@@ -17,11 +17,17 @@ new:              ## make new NAME=res1024  -> experiments/exp_NNN_res1024
 train:            ## make train EXP=exp_001_baseline [ARGS="--seeds 17,42,1337"]
 	$(CLI) train $(EXP) $(ARGS)
 
+model-smoke:      ## make model-smoke EXP=... [ARGS="--batches 10 --seed 17"]
+	$(CLI) model-smoke $(EXP) $(ARGS)
+
 eval:             ## make eval EXP=exp_001_baseline [ARGS="--seed 17"]
 	$(CLI) eval $(EXP) $(ARGS)
 
 tide:             ## make tide EXP=exp_001_baseline
 	$(CLI) tide $(EXP) $(ARGS)
+
+threshold-sweep:  ## make threshold-sweep EXP=... [ARGS="--seed 17 --thresholds .05,.10,.15,.20,.25"]
+	$(CLI) threshold-sweep $(EXP) $(ARGS)
 
 review:           ## make review EXP=exp_001_baseline ARGS="--launch"
 	$(CLI) review $(EXP) $(ARGS)

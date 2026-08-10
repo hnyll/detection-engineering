@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "mode": "inference",
+  "model": "rtdetr-l.pt",
+  "weights": "/home/hnyll/detection-engineering/rtdetr-l.pt",
+  "weights_sha256": "6de60b10d4bc566f00cda0f5b4d64afe4b66d48dc9695d2171effb7859d8e73f",
+  "weights_bytes": 66511432,
+  "imgsz": 960,
+  "batch": 1,
+  "software": {
+    "python": "3.10.12",
+    "torch": "2.9.1+cu128",
+    "ultralytics": "8.4.65"
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 4060",
+    "total_vram_mib": 8187.5,
+    "torch_cuda": "12.8",
+    "cudnn": 91002
+  },
+  "notes": [
+    "Hardware-feasibility measurement only; pretrained COCO predictions are not VisDrone accuracy results.",
+    "PyTorch execution; no TensorRT, export, or architecture-specific deployment optimization."
+  ],
+  "status": "pass",
+  "params": 32970476,
+  "params_m": 32.97,
+  "gflops": 239.47,
+  "precision": "fp32",
+  "conf": 0.001,
+  "iou": 0.7,
+  "max_det": 300,
+  "warmup": 5,
+  "timed_images": 20,
+  "image_sampling": "evenly spaced over sorted six-class VisDrone validation view",
+  "latency_ms": {
+    "mean": 52.814,
+    "p50": 51.862,
+    "p95": 59.129,
+    "fps_from_mean": 18.93
+  },
+  "detections": {
+    "mean": 300.0,
+    "min": 300,
+    "max": 300
+  },
+  "cuda_memory_mib": {
+    "baseline_allocated": 158.73,
+    "baseline_reserved": 178.0,
+    "peak_allocated": 331.17,
+    "peak_reserved": 408.0
+  }
+}

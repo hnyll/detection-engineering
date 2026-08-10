@@ -1,0 +1,50 @@
+{
+  "protocol_hash": "a9b8207b3cc7a070",
+  "dataset": "visdrone",
+  "split": "val",
+  "metric": "map50_95",
+  "experiments": [
+    {
+      "exp": "exp_001_baseline_640",
+      "n_seeds": 3,
+      "map50_95_mean": 0.17049,
+      "map50_95_std": 0.00074,
+      "ap_small_mean": 0.08731,
+      "latency_ms": 23.32667,
+      "fps": 50.13333,
+      "params_m": 2.584,
+      "gflops": 6.32
+    },
+    {
+      "exp": "exp_002_resolution_1024",
+      "n_seeds": 3,
+      "map50_95_mean": 0.1729,
+      "map50_95_std": 0.00188,
+      "ap_small_mean": 0.08061,
+      "latency_ms": 14.63667,
+      "fps": 75.4,
+      "params_m": 2.584,
+      "gflops": 6.32
+    }
+  ],
+  "verdicts": [
+    {
+      "baseline": "exp_001_baseline_640",
+      "candidate": "exp_002_resolution_1024",
+      "delta_map50_95": 0.00241,
+      "verdict": "significant improvement"
+    }
+  ],
+  "per_class_delta": {
+    "pedestrian": 0.00108,
+    "people": 0.00699,
+    "bicycle": 0.00489,
+    "car": -0.01107,
+    "van": -0.00181,
+    "truck": 0.01622,
+    "tricycle": 0.00766,
+    "awning-tricycle": 0.00825,
+    "bus": -0.01492,
+    "motor": 0.00684
+  }
+}

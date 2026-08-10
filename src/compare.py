@@ -10,7 +10,8 @@ from __future__ import annotations
 import json
 
 from . import paths
-from .expmeta import append_command_sh, protocol_hash, stale_seeds
+from .expmeta import (append_command_sh, effective_protocol_hash, load_config,
+                      stale_seeds)
 
 KEY = "map50_95"
 MIN_SEEDS = 3  # spec: variance measured with 3 seeds for important comparisons
@@ -61,10 +62,16 @@ def compare(exp_refs: list[str]) -> None:
             "REFUSED: evaluation identities differ (protocol/dataset/split/GT) — "
             "these results are not comparable."
         )
-    if protocol_hash() != next(iter(idents))[0]:
+    stale_protocols = []
+    for name, m in exps:
+        cfg = load_config(paths.resolve_exp(name))
+        expected = effective_protocol_hash(cfg)
+        if m["protocol"]["hash"] != expected:
+            stale_protocols.append(name)
+    if stale_protocols:
         raise SystemExit(
-            "REFUSED: metrics were produced under an older protocol.yaml than the "
-            "current one — re-run eval."
+            "REFUSED: metrics do not match the current base protocol plus "
+            f"experiment overrides for {stale_protocols} — re-run eval."
         )
 
     rows, verdicts = [], []

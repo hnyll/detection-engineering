@@ -1,0 +1,263 @@
+{
+  "protocol": {
+    "hash": "feddb3567d439c3a",
+    "base_hash": "a9b8207b3cc7a070",
+    "overrides": {
+      "imgsz": 960
+    },
+    "dataset": "visdrone_exp006_coco_aligned",
+    "split": "val",
+    "gt": "e1142868d4dc2e9d",
+    "imgsz": 960,
+    "conf": 0.001,
+    "iou": 0.7,
+    "max_det": 300,
+    "inference": {
+      "tiling": {
+        "enabled": true,
+        "schema_version": 2,
+        "implementation": "sahi.get_slice_bboxes+torchvision.batched_nms",
+        "implementation_sha256": "eff17e3fed47ac67",
+        "dependencies": {
+          "sahi": "0.11.20",
+          "torchvision": "0.24.1+cu128",
+          "opencv": "4.10.0.84"
+        },
+        "tile_height": 640,
+        "tile_width": 640,
+        "overlap_height_ratio": 0.2,
+        "overlap_width_ratio": 0.2,
+        "include_full_image": false,
+        "tile_batch": 1,
+        "per_tile_conf": 0.001,
+        "per_tile_nms_iou": 0.7,
+        "per_tile_max_det": 300,
+        "merge": "class_aware_nms",
+        "merge_iou": 0.7,
+        "global_max_det": 300
+      }
+    }
+  },
+  "n_seeds": 1,
+  "aggregate": {
+    "map50_95_mean": 0.31128,
+    "map50_95_std": null,
+    "map50_mean": 0.51307,
+    "map50_std": null,
+    "map75_mean": 0.31635,
+    "map75_std": null,
+    "ap_small_mean": 0.23582,
+    "ap_small_std": null,
+    "ap_medium_mean": 0.40098,
+    "ap_medium_std": null,
+    "ap_large_mean": 0.41141,
+    "ap_large_std": null,
+    "latency_ms_mean_mean": 66.4,
+    "latency_ms_mean_std": null,
+    "fps_batch1_mean": 15.1,
+    "fps_batch1_std": null
+  },
+  "overall": {
+    "map50_95": 0.31128,
+    "map50": 0.51307,
+    "map75": 0.31635,
+    "ap_small": 0.23582,
+    "ap_medium": 0.40098,
+    "ap_large": 0.41141,
+    "ar_max": 0.45216
+  },
+  "per_class": {
+    "person": {
+      "ap50_95": 0.27616,
+      "ap50": 0.60858,
+      "ap50_95_std": null
+    },
+    "bicycle": {
+      "ap50_95": 0.11428,
+      "ap50": 0.22499,
+      "ap50_95_std": null
+    },
+    "car": {
+      "ap50_95": 0.58555,
+      "ap50": 0.8195,
+      "ap50_95_std": null
+    },
+    "truck": {
+      "ap50_95": 0.23154,
+      "ap50": 0.33332,
+      "ap50_95_std": null
+    },
+    "bus": {
+      "ap50_95": 0.38977,
+      "ap50": 0.54881,
+      "ap50_95_std": null
+    },
+    "motorcycle": {
+      "ap50_95": 0.27037,
+      "ap50": 0.54323,
+      "ap50_95_std": null
+    }
+  },
+  "diagnostics": {
+    "images": 548,
+    "images_at_max_det": 536,
+    "pct_images_at_max_det": 97.81,
+    "tiled": {
+      "mode": "tiled",
+      "tiling": {
+        "enabled": true,
+        "schema_version": 2,
+        "implementation": "sahi.get_slice_bboxes+torchvision.batched_nms",
+        "implementation_sha256": "eff17e3fed47ac67",
+        "dependencies": {
+          "sahi": "0.11.20",
+          "torchvision": "0.24.1+cu128",
+          "opencv": "4.10.0.84"
+        },
+        "tile_height": 640,
+        "tile_width": 640,
+        "overlap_height_ratio": 0.2,
+        "overlap_width_ratio": 0.2,
+        "include_full_image": false,
+        "tile_batch": 1,
+        "per_tile_conf": 0.001,
+        "per_tile_nms_iou": 0.7,
+        "per_tile_max_det": 300,
+        "merge": "class_aware_nms",
+        "merge_iou": 0.7,
+        "global_max_det": 300
+      },
+      "images": 548,
+      "total_tiles": 2842,
+      "tiles_per_image_mean": 5.186,
+      "tiles_per_image_min": 2,
+      "tiles_per_image_max": 8,
+      "model_forwards": 2842,
+      "model_forwards_per_image_mean": 5.186,
+      "full_frame_views": 0,
+      "full_frame_candidates": 0,
+      "full_frame_views_at_local_max_det": 0,
+      "full_frame_views_at_local_max_det_conf_010": 0,
+      "full_frame_views_at_local_max_det_conf_025": 0,
+      "full_frame_rank_max_score_median": null,
+      "final_tile_detections": 163320,
+      "final_full_frame_detections": 0,
+      "images_with_full_frame_survivor": 0,
+      "pre_merge_detections": 740183,
+      "post_merge_detections": 488344,
+      "final_detections": 163320,
+      "border_candidates": 141580,
+      "rejected_invalid_candidates": 5,
+      "invalid_final_boxes": 0,
+      "tiles_at_local_max_det": 1985,
+      "pct_tiles_at_local_max_det": 69.85,
+      "tiles_at_local_max_det_conf_010": 34,
+      "tiles_at_local_max_det_conf_025": 0,
+      "local_rank_max_score_median": 0.00504,
+      "images_at_global_max_det": 536,
+      "pct_images_at_global_max_det": 97.81,
+      "images_at_global_max_det_conf_010": 78,
+      "images_at_global_max_det_conf_025": 7,
+      "rank_max_score_median": 0.0301,
+      "tile_layout_sha256": "79e86ef06d0c9009",
+      "native_size_recall": {
+        "definition": "native-source GT shortest side; same-class score-greedy IoU match",
+        "iou_threshold": 0.5,
+        "overall": {
+          "gt": 38759,
+          "matched": 32579,
+          "unmatched": 6180,
+          "recall": 0.84055
+        },
+        "by_native_short_side": {
+          "lt8": {
+            "gt": 5074,
+            "matched": 3246,
+            "unmatched": 1828,
+            "recall": 0.63973
+          },
+          "8_to_15": {
+            "gt": 11861,
+            "matched": 9747,
+            "unmatched": 2114,
+            "recall": 0.82177
+          },
+          "16_to_31": {
+            "gt": 13414,
+            "matched": 11737,
+            "unmatched": 1677,
+            "recall": 0.87498
+          },
+          "ge32": {
+            "gt": 8410,
+            "matched": 7849,
+            "unmatched": 561,
+            "recall": 0.93329
+          }
+        }
+      }
+    }
+  },
+  "artifacts": {
+    "control_parity": {
+      "file": "control_parity_val_s17.json",
+      "sha256": "305d9c2bcc8c9bed"
+    },
+    "tile_manifest": {
+      "file": "tile_manifest_val_s17.json",
+      "sha256": "c3faa85ac63f173d"
+    },
+    "tiled_diagnostics": {
+      "file": "tiled_diagnostics_val_s17.json",
+      "sha256": "4fd5cc7eef2825d7"
+    },
+    "predictions": {
+      "file": "predictions_val_s17.json",
+      "sha256": "2e324ed84dc1325f"
+    },
+    "experiment_config": {
+      "file": "config.yaml",
+      "sha256": "4a36b6c39e4343e7"
+    }
+  },
+  "speed": {
+    "latency_ms_mean": 66.4,
+    "latency_ms_p50": 74.77,
+    "latency_ms_p95": 81.68,
+    "fps_batch1": 15.1,
+    "device": "NVIDIA GeForce RTX 4060",
+    "n_timed": 100,
+    "tiles_per_image_mean_timed": 5.26,
+    "model_forwards_per_image_mean_timed": 5.26,
+    "timing_scope": "decode+slicing+all model views+global merge",
+    "timing_sample": "100 evenly spaced images across the sorted validation split"
+  },
+  "model": {
+    "params_m": 2.583,
+    "gflops": 14.22,
+    "weights": "/home/hnyll/detection-engineering/experiments/exp_010_class_weighted_960/seeds/s17/weights/best.pt",
+    "weights_sha256": "d078cf0e25577202",
+    "weights_source": {
+      "experiment": "exp_010_class_weighted_960",
+      "seed": 17
+    },
+    "gflops_per_forward": 14.22,
+    "mean_forwards_per_image": 5.186,
+    "estimated_pipeline_gflops_mean": 73.73
+  },
+  "seeds": {
+    "s17": {
+      "map50_95": 0.31128,
+      "map50": 0.51307,
+      "ap_small": 0.23582,
+      "weights_sha256": "d078cf0e25577202",
+      "weights": "/home/hnyll/detection-engineering/experiments/exp_010_class_weighted_960/seeds/s17/weights/best.pt"
+    }
+  },
+  "env": {
+    "python": "3.10.12",
+    "torch": "2.9.1+cu128",
+    "ultralytics": "8.4.65",
+    "git_sha": "e10f4e5"
+  }
+}

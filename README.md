@@ -55,6 +55,31 @@ reproducible baseline with a proven checkpoint resume and a W&B run; Improve nee
 ≥3 controlled hypotheses with at least one documented negative result; Compare
 needs 3-seed variance and refuses cross-protocol comparisons.
 
+## Experiment ledger
+
+The repository records both useful and negative results. Values below are
+fixed-protocol validation results; rows with different taxonomies or inference
+pipelines are not leaderboard-equivalent.
+
+| Experiment | Isolated treatment | Task / protocol | mAP50-95 | Decision |
+|---|---|---|---:|---|
+| Exp1 | YOLO11n baseline at 640 | VisDrone 10-class, 3 seeds | 0.17049 ± 0.00074 | reference baseline |
+| Exp2 | train at 1024, evaluate at 640 | VisDrone 10-class, 3 seeds | 0.17290 ± 0.00188 | reject: tiny AP regressed |
+| Exp3 | merge into 3 coarse groups | custom 3-class task | 0.27391 | useful taxonomy diagnostic; not Task 1 |
+| Exp4 | add a P2 detection head | VisDrone 10-class | 0.16470 | negative |
+| Exp5 | repeat-factor image sampling | VisDrone 10-class | 0.17265 | negative |
+| Exp6 | COCO-aligned 6 classes + balancing | custom 6-class task | 0.21767 | application baseline |
+| Exp7 | same Exp6 checkpoint, infer at 960 | custom 6-class / 960 | 0.26661 | positive with FP caveat |
+| Exp8 | train and evaluate at 960 | custom 6-class / 960 | 0.28847 | positive |
+| Exp10 | inverse-frequency class loss | custom 6-class / 960 | 0.29311 | inconclusive; Cls dAP unchanged |
+| Exp11 | native 640 tiles only | custom tiled pipeline | 0.31128 | tiny-object mechanism positive; deployment negative |
+| Exp12 | full-frame + tiled fusion | custom hybrid pipeline | 0.32360 | best accuracy; FP/duplicate pressure remains |
+| Exp13 | ConvNeXt-T + FPN Faster R-CNN | custom 6-class / 960 | pending | hardware smoke passed; training interrupted |
+
+Exp9 was an analysis-only small-object signal audit and was stopped before the
+manual review. Full hypotheses, protocol identities, TIDE reports, guardrails,
+and caveats live in each experiment directory.
+
 ## Hardware honesty
 
 Everything is tuned for one RTX 4060 (8 GB) on WSL2 — n/s models, AMP, explicit

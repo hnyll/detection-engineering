@@ -1,0 +1,17 @@
+# Exp3 is a taxonomy experiment. The source VisDrone labels are untouched;
+# scripts/build_grouped_dataset.py creates a linked-image, remapped-label view.
+meta:
+  name: "class_grouping"
+  parent_exp: "exp_001_baseline_640"
+  dataset: "visdrone_exp003_grouped"
+  seeds: [17]
+  causal_variable: "class taxonomy: 10 VisDrone classes -> 3 application groups"
+  compensating_changes: []
+  mapping_csv: "experiments/exp_003_class_grouping/class_groups.csv"
+  source_dataset: "visdrone"
+
+train:
+  model: yolo11n.pt
+  imgsz: 640
+  epochs: 100
+  batch: 12

@@ -1,0 +1,85 @@
+{
+  "protocol": {
+    "hash": "a9b8207b3cc7a070",
+    "dataset": "visdrone_exp003_grouped",
+    "split": "val",
+    "gt": "e8cf7d6451f6cadb",
+    "imgsz": 640,
+    "conf": 0.001,
+    "iou": 0.7,
+    "max_det": 300
+  },
+  "n_seeds": 1,
+  "aggregate": {
+    "map50_95_mean": 0.27391,
+    "map50_95_std": null,
+    "map50_mean": 0.51425,
+    "map50_std": null,
+    "map75_mean": 0.24834,
+    "map75_std": null,
+    "ap_small_mean": 0.1838,
+    "ap_small_std": null,
+    "ap_medium_mean": 0.43009,
+    "ap_medium_std": null,
+    "ap_large_mean": 0.60579,
+    "ap_large_std": null,
+    "latency_ms_mean_mean": 12.99,
+    "latency_ms_mean_std": null,
+    "fps_batch1_mean": 77.0,
+    "fps_batch1_std": null
+  },
+  "overall": {
+    "map50_95": 0.27391,
+    "map50": 0.51425,
+    "map75": 0.24834,
+    "ap_small": 0.1838,
+    "ap_medium": 0.43009,
+    "ap_large": 0.60579,
+    "ar_max": 0.3582
+  },
+  "per_class": {
+    "person": {
+      "ap50_95": 0.15221,
+      "ap50": 0.39412,
+      "ap50_95_std": null
+    },
+    "small_vehicle": {
+      "ap50_95": 0.15732,
+      "ap50": 0.36984,
+      "ap50_95_std": null
+    },
+    "road_vehicle": {
+      "ap50_95": 0.51221,
+      "ap50": 0.77879,
+      "ap50_95_std": null
+    }
+  },
+  "speed": {
+    "latency_ms_mean": 12.99,
+    "latency_ms_p50": 9.78,
+    "latency_ms_p95": 23.01,
+    "fps_batch1": 77.0,
+    "device": "NVIDIA GeForce RTX 4060",
+    "n_timed": 100
+  },
+  "model": {
+    "params_m": 2.583,
+    "gflops": 6.32,
+    "weights": "/home/hnyll/detection-engineering/experiments/exp_003_class_grouping/seeds/s17/weights/best.pt",
+    "weights_sha256": "1d526c5566d7e0f1"
+  },
+  "seeds": {
+    "s17": {
+      "map50_95": 0.27391,
+      "map50": 0.51425,
+      "ap_small": 0.1838,
+      "weights_sha256": "1d526c5566d7e0f1"
+    }
+  },
+  "env": {
+    "python": "3.10.12",
+    "torch": "2.9.1+cu128",
+    "ultralytics": "8.4.65",
+    "git_sha": "e10f4e5"
+  }
+}

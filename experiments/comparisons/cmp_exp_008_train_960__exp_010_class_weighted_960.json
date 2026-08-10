@@ -1,0 +1,46 @@
+{
+  "protocol_hash": "821306fe3a07ceac",
+  "dataset": "visdrone_exp006_coco_aligned",
+  "split": "val",
+  "metric": "map50_95",
+  "experiments": [
+    {
+      "exp": "exp_008_train_960",
+      "n_seeds": 1,
+      "map50_95_mean": 0.28847,
+      "map50_95_std": null,
+      "ap_small_mean": 0.17472,
+      "latency_ms": 10.4,
+      "fps": 96.1,
+      "params_m": 2.583,
+      "gflops": 14.22
+    },
+    {
+      "exp": "exp_010_class_weighted_960",
+      "n_seeds": 1,
+      "map50_95_mean": 0.29311,
+      "map50_95_std": null,
+      "ap_small_mean": 0.17903,
+      "latency_ms": 10.55,
+      "fps": 94.7,
+      "params_m": 2.583,
+      "gflops": 14.22
+    }
+  ],
+  "verdicts": [
+    {
+      "baseline": "exp_008_train_960",
+      "candidate": "exp_010_class_weighted_960",
+      "delta_map50_95": 0.00464,
+      "verdict": "INSUFFICIENT-SEEDS (significance needs \u22653 seeds per side; have 1 vs 1)"
+    }
+  ],
+  "per_class_delta": {
+    "person": -0.0021,
+    "bicycle": 0.00473,
+    "car": -0.00119,
+    "truck": 0.01506,
+    "bus": 0.00839,
+    "motorcycle": 0.00291
+  }
+}
